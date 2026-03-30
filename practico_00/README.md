@@ -1,31 +1,4 @@
-# Trabajo Práctico 0: Uso de Git y Github
 
-Este trabajo práctico tiene como objetivo que el alumno se familiarice con el concepto de sistema de control de versiones (VCS) y en particular que aprenda a utilizar Git. Para ello se utilizará la plataforma online GitHub, que provee un entorno gratuito para hospedar los repositorios remotos, realizar Pull Requests y facilitar la tarea de control y corrección de errores.
-
-Se recomienda que el alumno lea la siguiente [guia introductoria](https://elc.github.io/posts/git-guide-with-visual-interface/es/) creada por el alumno Ezequiel L. Castaño y que luego realice los ejercicios propuestos.
-
-**NOTA**: Para esta actividad los alumnos deberán formar grupos de 2 personas. Estos grupos serán los definitivos por lo que se alienta la cooperación, cada integrante tendrá un rol diferente que determinará su tareas en las actividades.
-
-El trabajo práctico consta de actividades grupales e individuales. Las actividades individuales tendrán el código **I** y las grupales el código **G**.
-
-Cada grupo deberá asignar los siguientes roles a sus integrantes, los roles no pueden repetirse ni cambiarse luego de establecerse y cada integrante deberá tener un único rol:
-
-1. Integrante `Rojo`
-1. Integrante `Amarillo`
-
-A partir de este momento las actividades grupales estarán enunciadas en función de los roles propuestos. Las actividades individuales deberán ser realizadas por cada integrante. Se llamará a cada integrante por el color de su rol.
-
-## Restricciones importantes
-
-Todo el trabajo deberá realizarse utilizando git, se podrá utilizar la consola o alguna aplicativo con interfaz gráfica pero **NO** se podrá utilizar el editor online de GitHub. Copiar y pegar el código en el editor online implica que el trabajo no está aprobado ya que no se están utilizando los conceptos esperados.
-
-Los commits deben ser referidos a un tema, NO se aprobarán trabajos que realicen varios commits para un mismo tema, deberán modificarse los archivos y subirse en un único commit. Realizar varios commits por un mismo tema o un commit por archivo es una mala práctica e implica que no se están utilizando los conceptos esperados.
-
-Cada usuario deberá utilizar su cuenta personal de GitHub durante todo el proceso, no se permiten cuentas comunitarias o grupales.
-
-## Actividades
-
-Se realizarán 3 actividades donde se explorarán los conceptos básicos de Git y GitHub. Se recomienda que cada actividad de realice durante el periodo de clases y que estén presentes todos los miembros del equipo. Se dispondrán de 2 clases de práctica para llevar a cabo este TP.
 
 ### Actividad 1: Inicialización con Git y GitHub
 

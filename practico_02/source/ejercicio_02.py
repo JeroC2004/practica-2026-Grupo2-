@@ -10,7 +10,11 @@ comando (estando parados dentro de la carpeta practico_02):
 $PATH$/practico_02> python -m source.ejercicio_02
 """
 
-# Completar
+from . import util
+from .data import database
+from ..config import test_config
+from ..config.db_config import migrations
+from .. import main
 
 
 # NO MODIFICAR - INICIO

@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Detalle Plaza</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+
+<div class="container mt-5">
+
+    <div class="card shadow">
+
+        <div class="card-header">
+            Información de la Plaza
+        </div>
+
+        <div class="card-body text-center">
+
+            <h2 class="mb-4">
+                Plaza {{ plaza[0] }}
+            </h2>
+
+            {% if plaza[1] == "Libre" %}
+
+                <span class="badge bg-success estado-badge">
+                    Libre
+                </span>
+
+            {% elif plaza[1] == "Reservada" %}
+
+                <span class="badge bg-warning text-dark estado-badge">
+                    Reservada
+                </span>
+
+            {% else %}
+
+                <span class="badge bg-danger estado-badge">
+                    Ocupada
+                </span>
+
+            {% endif %}
+
+            <hr>
+
+            <div class="d-flex justify-content-center gap-3 flex-wrap">
+
+                <a href="/plaza/{{ plaza[0] }}/reservar"
+                   class="btn btn-warning">
+                    Reservar
+                </a>
+
+                <a href="/plaza/{{ plaza[0] }}/ocupar"
+                   class="btn btn-danger">
+                    Ocupar
+                </a>
+
+                <a href="/plaza/{{ plaza[0] }}/liberar"
+                   class="btn btn-success">
+                    Liberar
+                </a>
+
+            </div>
+
+            <div class="footer-volver">
+
+                <a href="/plazas"
+                   class="btn btn-secondary">
+                    Volver
+                </a>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+</body>
+</html>

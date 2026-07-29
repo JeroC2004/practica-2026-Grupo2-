@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plazas</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+
+<div class="container mt-5">
+
+    <h1 class="titulo-principal mb-4">
+        🚗 Estado de las Plazas
+    </h1>
+
+    <div class="nav-estacionamiento mb-4">
+
+        <a href="/plazas" class="btn btn-dark">
+            Todas
+        </a>
+
+        <a href="/plazas/Libre" class="btn btn-success">
+            Libres
+        </a>
+
+        <a href="/plazas/Reservada" class="btn btn-warning">
+            Reservadas
+        </a>
+
+        <a href="/plazas/Ocupada" class="btn btn-danger">
+            Ocupadas
+        </a>
+
+    </div>
+
+    <div class="row">
+
+        {% for plaza in plazas %}
+
+        <div class="col-lg-3 col-md-4 col-sm-6 mb-4">
+
+            <a href="/plaza/{{ plaza[0] }}"
+               class="text-decoration-none">
+
+                <div class="card plaza-card shadow">
+
+                    <div class="card-body text-center
+
+                    {% if plaza[1] == 'Libre' %}
+                        estado-libre text-white
+
+                    {% elif plaza[1] == 'Reservada' %}
+                        estado-reservada
+
+                    {% else %}
+                        estado-ocupada text-white
+                    {% endif %}
+                    ">
+
+                        <h2>🚘</h2>
+
+                        <h5>
+                            Plaza {{ plaza[0] }}
+                        </h5>
+
+                        <p class="mb-0">
+                            {{ plaza[1] }}
+                        </p>
+
+                    </div>
+
+                </div>
+
+            </a>
+
+        </div>
+
+        {% endfor %}
+
+    </div>
+
+    <div class="footer-volver">
+
+        <a href="/"
+           class="btn btn-secondary">
+            Volver al Inicio
+        </a>
+
+    </div>
+
+</div>
+
+</body>
+</html>

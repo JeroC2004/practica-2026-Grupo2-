@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{% block titulo %}Transcriptor{% endblock %}</title>
+<style>
+    * { box-sizing: border-box; }
+    body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        max-width: 780px;
+        margin: 0 auto;
+        padding: 32px 20px;
+        background: #f7f7f5;
+        color: #2b2b28;
+        line-height: 1.5;
+    }
+    header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 28px;
+    }
+    h1 { font-size: 1.4rem; margin: 0; }
+    a.boton, button.boton {
+        background: #c96442;
+        color: white;
+        border: none;
+        padding: 10px 18px;
+        border-radius: 8px;
+        text-decoration: none;
+        font-size: 0.95rem;
+        cursor: pointer;
+        display: inline-block;
+    }
+    a.boton:hover, button.boton:hover { background: #b5563a; }
+    .card {
+        background: white;
+        border: 1px solid #e5e3de;
+        border-radius: 10px;
+        padding: 18px 20px;
+        margin-bottom: 14px;
+    }
+    .card h3 { margin: 0 0 6px 0; font-size: 1.05rem; }
+    .meta { color: #888; font-size: 0.85rem; margin-bottom: 8px; }
+    .flash {
+        background: #fff3e0;
+        border: 1px solid #ffcc80;
+        padding: 10px 14px;
+        border-radius: 8px;
+        margin-bottom: 16px;
+        font-size: 0.9rem;
+    }
+    form { margin-top: 10px; }
+    label { display: block; margin-bottom: 6px; font-weight: 600; font-size: 0.9rem; }
+    input[type=text], input[type=file] {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #d8d5cf;
+        border-radius: 8px;
+        margin-bottom: 16px;
+        font-size: 0.95rem;
+    }
+    .texto-transcripcion {
+        white-space: pre-wrap;
+        background: #faf9f7;
+        padding: 16px;
+        border-radius: 8px;
+        border: 1px solid #eee;
+    }
+    .vacio { color: #999; text-align: center; padding: 40px 0; }
+    .fila-acciones { margin-top: 20px; display: flex; gap: 10px; }
+</style>
+</head>
+<body>
+<header>
+    <h1>🎙️ Transcriptor de notas</h1>
+    <a class="boton" href="{{ url_for('subir') }}">+ Nueva transcripción</a>
+</header>
+
+{% with mensajes = get_flashed_messages() %}
+    {% if mensajes %}
+        {% for m in mensajes %}
+            <div class="flash">{{ m }}</div>
+        {% endfor %}
+    {% endif %}
+{% endwith %}
+
+{% block contenido %}{% endblock %}
+
+</body>
+</html>

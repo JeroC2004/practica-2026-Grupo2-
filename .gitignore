@@ -101,3 +101,8 @@ ENV/
 .mypy_cache/
 
 .idea
+
+# TPI - Libro de IVA
+TPI/tpi.db
+TPI/certificados/*.key
+TPI/certificados/*.crt

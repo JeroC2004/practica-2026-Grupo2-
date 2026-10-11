@@ -103,6 +103,9 @@ ENV/
 .idea
 
 # TPI - Libro de IVA
-TPI/tpi.db
-TPI/certificados/*.key
-TPI/certificados/*.crt
+TPI/back/tpi.db
+TPI/back/certificados/*.key
+TPI/back/certificados/*.crt
+TPI/front/node_modules/
+TPI/front/dist/
+TPI/front/*.tsbuildinfo

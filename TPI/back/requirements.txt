@@ -2,12 +2,11 @@
 SQLAlchemy==2.0.49
 pytest==9.0.3
 
-# Fase 2 - Presentacion (FastAPI)
+# Fase 2 - Presentacion (FastAPI + API JSON; el front vive en TPI/front)
 fastapi==0.136.1
-uvicorn[standard]
-jinja2
-python-multipart
-python-jose[cryptography]
+uvicorn[standard]==0.54.0
+python-multipart==0.0.32
+PyJWT==2.15.1
 
 # Fase 3 - OCR
 # Requiere ademas instalar el binario de Tesseract OCR en el sistema

@@ -24,23 +24,25 @@ export function LoginPage() {
   }
 
   return (
-    <>
+    <div className="pagina angosta">
       <h1>Ingresar</h1>
-      {error && <p className="error">{error}</p>}
-      <form onSubmit={enviar}>
-        <label>
-          CUIT
-          <input value={cuit} onChange={(e) => setCuit(e.target.value)} maxLength={11} minLength={11} required />
-        </label>
-        <label>
-          Contraseña
-          <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
-        </label>
-        <button type="submit">Ingresar</button>
-      </form>
-      <p>
+      <div className="card">
+        {error && <p className="error">{error}</p>}
+        <form onSubmit={enviar}>
+          <label>
+            CUIT
+            <input value={cuit} onChange={(e) => setCuit(e.target.value)} maxLength={11} minLength={11} required />
+          </label>
+          <label>
+            Contraseña
+            <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+          </label>
+          <button type="submit">Ingresar</button>
+        </form>
+      </div>
+      <p className="enlace-secundario">
         ¿No tenés cuenta? <Link to="/registro">Registrate</Link>
       </p>
-    </>
+    </div>
   );
 }

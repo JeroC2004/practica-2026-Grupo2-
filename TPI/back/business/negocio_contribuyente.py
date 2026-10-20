@@ -3,7 +3,7 @@ import hmac
 import os
 import re
 
-from business.excepciones import CuitInvalido, CuitDuplicado, CredencialesInvalidas
+from business.excepciones import CuitInvalido, CuitDuplicado, CredencialesInvalidas, PasswordNoCoincide
 from business.modelos import Contribuyente
 from datos.datos_contribuyente import DatosContribuyente
 
@@ -26,14 +26,15 @@ class NegocioContribuyente(object):
     def __init__(self):
         self.datos = DatosContribuyente()
 
-    def registrar(self, cuit, razon_social, condicion_iva, password):
+    def registrar(self, cuit, razon_social, condicion_iva, password, confirmacion_password):
         """
         Registra un nuevo contribuyente, validando las reglas de negocio.
         :rtype: Contribuyente
-        :raise: CuitInvalido, CuitDuplicado
+        :raise: CuitInvalido, CuitDuplicado, PasswordNoCoincide
         """
         self.regla_cuit_valido(cuit)
         self.regla_cuit_unico(cuit)
+        self.regla_passwords_coinciden(password, confirmacion_password)
         contribuyente = Contribuyente(
             cuit=cuit,
             razon_social=razon_social,
@@ -41,6 +42,13 @@ class NegocioContribuyente(object):
             password_hash=_hashear_password(password),
         )
         return self.datos.alta(contribuyente)
+
+    def obtener(self, cuit):
+        """
+        Devuelve los datos de un contribuyente por su CUIT.
+        :rtype: Contribuyente
+        """
+        return self.datos.buscar_por_cuit(cuit)
 
     def login(self, cuit, password):
         """
@@ -71,4 +79,14 @@ class NegocioContribuyente(object):
         """
         if self.datos.existe_cuit(cuit):
             raise CuitDuplicado(f"Ya existe un contribuyente registrado con el CUIT '{cuit}'.")
+        return True
+
+    def regla_passwords_coinciden(self, password, confirmacion_password):
+        """
+        La contraseña y su confirmación deben ser idénticas.
+        :raise: PasswordNoCoincide
+        :rtype: bool
+        """
+        if password != confirmacion_password:
+            raise PasswordNoCoincide("Las contraseñas ingresadas no coinciden.")
         return True

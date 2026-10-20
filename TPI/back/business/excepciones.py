@@ -10,6 +10,10 @@ class CredencialesInvalidas(Exception):
     pass
 
 
+class PasswordNoCoincide(Exception):
+    pass
+
+
 class ComprobanteDuplicado(Exception):
     pass
 
@@ -19,4 +23,12 @@ class ComprobanteInvalido(Exception):
 
 
 class CoeficienteInvalido(Exception):
+    pass
+
+
+class EmisionArcaInvalida(Exception):
+    pass
+
+
+class EmisionArcaRechazada(Exception):
     pass

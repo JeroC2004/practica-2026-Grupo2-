@@ -24,6 +24,9 @@ def _a_dominio(orm: ComprobanteORM) -> Comprobante:
         total=orm.total,
         condicion=CondicionComprobante(orm.condicion),
         origen=OrigenComprobante(orm.origen),
+        numero_arca=orm.numero_arca,
+        cae=orm.cae,
+        cae_vencimiento=orm.cae_vencimiento,
     )
 
 
@@ -52,6 +55,28 @@ class DatosComprobante:
                 .first()
             )
             return _a_dominio(orm) if orm else None
+
+    def obtener_por_id(self, comprobante_id):
+        """
+        Busca un comprobante por su id. Devuelve None si no existe.
+        :rtype: Comprobante
+        """
+        with obtener_sesion() as sesion:
+            orm = sesion.get(ComprobanteORM, comprobante_id)
+            return _a_dominio(orm) if orm else None
+
+    def actualizar_emision_arca(self, comprobante_id, numero_arca, cae, cae_vencimiento):
+        """
+        Guarda el resultado de emitir un comprobante en ARCA (número oficial y CAE).
+        :rtype: Comprobante
+        """
+        with obtener_sesion() as sesion:
+            orm = sesion.get(ComprobanteORM, comprobante_id)
+            orm.numero_arca = numero_arca
+            orm.cae = cae
+            orm.cae_vencimiento = cae_vencimiento
+            sesion.flush()
+            return _a_dominio(orm)
 
     def alta(self, comprobante):
         """

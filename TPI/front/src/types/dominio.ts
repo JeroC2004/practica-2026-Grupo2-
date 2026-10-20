@@ -37,7 +37,14 @@ export interface ComprobanteIn {
 export interface Comprobante extends ComprobanteIn {
   id: number;
   origen: string;
+  numero_arca: number | null;
+  cae: string | null;
+  cae_vencimiento: string | null;
 }
+
+// Lo que devuelve POST /comprobantes/ocr: cada campo puede venir null si el
+// OCR no lo pudo reconocer en la imagen.
+export type ComprobanteDetectado = { [K in keyof ComprobanteIn]: ComprobanteIn[K] | null };
 
 export interface LibroIva {
   cuit_contribuyente: string;
@@ -47,4 +54,24 @@ export interface LibroIva {
   ventas: Comprobante[];
   coeficiente_prorrateo: number;
   credito_fiscal_computable: number;
+}
+
+// GET /api/validacion-arca/{anio}/{mes}: por cada venta del mes, si ya se
+// emitió en ARCA (tiene CAE) se la vuelve a consultar en vivo para confirmar
+// que sigue vigente; si no, queda "pendiente" de emitir.
+export const ESTADOS_ARCA = ["confirmado", "pendiente", "no_encontrado_en_arca"] as const;
+export type EstadoArcaTipo = (typeof ESTADOS_ARCA)[number];
+
+export interface EstadoArca {
+  comprobante_id: number;
+  tipo: TipoComprobante;
+  punto_venta: number;
+  numero: number;
+  numero_arca: number | null;
+  fecha: string;
+  total: number;
+  estado: EstadoArcaTipo;
+  cae: string | null;
+  cae_vencimiento: string | null;
+  total_en_arca: number | null;
 }

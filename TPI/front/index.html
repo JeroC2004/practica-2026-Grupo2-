@@ -4,6 +4,20 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Libro de IVA Digital</title>
+    <script>
+      // Se aplica antes de pintar la página para que no haya flash del tema
+      // incorrecto. Oscuro es el default: solo se marca el atributo si el
+      // usuario eligió "claro" explícitamente (ver src/theme/useTheme.ts).
+      (function () {
+        try {
+          if (localStorage.getItem("tpi_tema") === "light") {
+            document.documentElement.dataset.theme = "light";
+          }
+        } catch (error) {
+          /* localStorage puede fallar en navegación privada: no es crítico. */
+        }
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

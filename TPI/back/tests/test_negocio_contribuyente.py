@@ -1,6 +1,6 @@
 import pytest
 
-from business.excepciones import CuitInvalido, CuitDuplicado, CredencialesInvalidas
+from business.excepciones import CuitInvalido, CuitDuplicado, CredencialesInvalidas, PasswordNoCoincide
 from business.modelos import CondicionIva, Contribuyente
 from business.negocio_contribuyente import NegocioContribuyente, _hashear_password
 
@@ -25,7 +25,7 @@ def test_registrar_con_cuit_invalido_levanta_excepcion():
     negocio.datos = FakeDatosContribuyente()
 
     with pytest.raises(CuitInvalido):
-        negocio.registrar("no-es-un-cuit", "Juan Perez", CondicionIva.MONOTRIBUTO, "secreta")
+        negocio.registrar("no-es-un-cuit", "Juan Perez", CondicionIva.MONOTRIBUTO, "secreta", "secreta")
 
 
 def test_registrar_con_cuit_duplicado_levanta_excepcion():
@@ -35,13 +35,21 @@ def test_registrar_con_cuit_duplicado_levanta_excepcion():
     )})
 
     with pytest.raises(CuitDuplicado):
-        negocio.registrar("20304050607", "Juan Perez", CondicionIva.MONOTRIBUTO, "secreta")
+        negocio.registrar("20304050607", "Juan Perez", CondicionIva.MONOTRIBUTO, "secreta", "secreta")
+
+
+def test_registrar_con_confirmacion_de_password_distinta_levanta_excepcion():
+    negocio = NegocioContribuyente()
+    negocio.datos = FakeDatosContribuyente()
+
+    with pytest.raises(PasswordNoCoincide):
+        negocio.registrar("20304050607", "Juan Perez", CondicionIva.MONOTRIBUTO, "secreta", "otra-cosa")
 
 
 def test_login_con_password_correcta():
     negocio = NegocioContribuyente()
     negocio.datos = FakeDatosContribuyente()
-    registrado = negocio.registrar("20304050607", "Juan Perez", CondicionIva.MONOTRIBUTO, "secreta")
+    registrado = negocio.registrar("20304050607", "Juan Perez", CondicionIva.MONOTRIBUTO, "secreta", "secreta")
 
     logueado = negocio.login("20304050607", "secreta")
 
@@ -51,7 +59,7 @@ def test_login_con_password_correcta():
 def test_login_con_password_incorrecta_levanta_excepcion():
     negocio = NegocioContribuyente()
     negocio.datos = FakeDatosContribuyente()
-    negocio.registrar("20304050607", "Juan Perez", CondicionIva.MONOTRIBUTO, "secreta")
+    negocio.registrar("20304050607", "Juan Perez", CondicionIva.MONOTRIBUTO, "secreta", "secreta")
 
     with pytest.raises(CredencialesInvalidas):
         negocio.login("20304050607", "incorrecta")

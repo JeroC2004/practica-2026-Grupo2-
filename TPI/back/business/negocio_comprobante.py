@@ -28,6 +28,20 @@ class NegocioComprobante(object):
         """
         return self.datos.listar_por_mes(cuit_contribuyente, condicion, mes, anio)
 
+    def obtener(self, comprobante_id):
+        """
+        Devuelve un comprobante por su id, o None si no existe.
+        :rtype: Comprobante
+        """
+        return self.datos.obtener_por_id(comprobante_id)
+
+    def registrar_emision_arca(self, comprobante_id, numero_arca, cae, cae_vencimiento):
+        """
+        Guarda en el comprobante el resultado de haberlo emitido en ARCA.
+        :rtype: Comprobante
+        """
+        return self.datos.actualizar_emision_arca(comprobante_id, numero_arca, cae, cae_vencimiento)
+
     def regla_sin_duplicados(self, comprobante):
         """
         No puede cargarse dos veces el mismo comprobante (mismo tipo, punto de

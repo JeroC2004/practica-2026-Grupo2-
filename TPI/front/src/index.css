@@ -1,84 +1,335 @@
-:root {
-  color-scheme: light dark;
+@import "tailwindcss";
+
+/* Paleta "Emerald + Charcoal": verde contable/financiero, temático con el IVA.
+   Oscuro es el default de la app (no depende del sistema operativo); el toggle
+   de ThemeToggle.tsx pone data-theme="light" en <html> para el modo claro, y
+   lo persiste en localStorage (leído también en index.html para evitar el
+   flash del tema incorrecto en la primera carga). */
+@theme {
+  --color-canvas: #111827;
+  --color-surface: #1f2937;
+  --color-border: #374151;
+  --color-ink: #f3f4f6;
+  --color-muted: #9ca3af;
+  --color-primary: #34d399;
+  --color-primary-hover: #6ee7b7;
+  --color-primary-contrast: #111827;
+  --color-danger: #f87171;
+  --color-danger-bg: #3f1d1d;
 }
 
-body {
-  font-family: system-ui, sans-serif;
-  margin: 0;
-  padding: 0 1rem;
+:root[data-theme="light"] {
+  --color-canvas: #f7f8f7;
+  --color-surface: #ffffff;
+  --color-border: #e5e7eb;
+  --color-ink: #111827;
+  --color-muted: #6b7280;
+  --color-primary: #059669;
+  --color-primary-hover: #047857;
+  --color-primary-contrast: #ffffff;
+  --color-danger: #dc2626;
+  --color-danger-bg: #fef2f2;
 }
 
-.contenedor {
-  max-width: 720px;
-  margin: 2rem auto;
+@layer base {
+  :root {
+    color-scheme: dark;
+  }
+
+  :root[data-theme="light"] {
+    color-scheme: light;
+  }
+
+  body {
+    @apply m-0 bg-canvas text-ink antialiased;
+    font-family:
+      system-ui,
+      -apple-system,
+      "Segoe UI",
+      sans-serif;
+  }
+
+  h1 {
+    @apply m-0 mb-5 text-2xl font-bold tracking-tight;
+  }
+
+  h2 {
+    @apply mt-8 mb-3 text-lg font-semibold;
+  }
+
+  input,
+  select {
+    /* text-base (16px) a propósito: con menos, Safari en iOS hace zoom al enfocar. */
+    @apply rounded-lg border border-border bg-canvas px-3 py-2.5 text-base text-ink;
+  }
+
+  input:focus,
+  select:focus {
+    @apply outline-2 outline-offset-1 outline-primary border-primary;
+  }
+
+  /* El input de archivo nativo no respeta el estilo de arriba (el botón es un
+     pseudo-elemento aparte): se le saca la caja y se estiliza ese botón solo. */
+  input[type="file"] {
+    @apply border-0 bg-transparent px-0 py-1 text-sm text-muted file:mr-3 file:cursor-pointer file:rounded-lg file:border-0 file:bg-primary file:px-4 file:py-2 file:text-sm file:font-semibold file:text-primary-contrast hover:file:bg-primary-hover;
+  }
+
+  input[type="file"]:focus {
+    @apply outline-none;
+  }
 }
 
-nav {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  margin-bottom: 1.5rem;
-  border-bottom: 1px solid #8884;
-  padding-bottom: 0.75rem;
-}
+@layer components {
+  .app-shell {
+    @apply flex min-h-screen flex-col;
+  }
 
-nav a {
-  text-decoration: none;
-}
+  .app-body {
+    @apply flex flex-1;
+  }
 
-nav button {
-  margin-left: auto;
-}
+  /* --- Sidebar (en fila debajo del topbar, que ocupa todo el ancho) --- */
 
-form {
-  display: grid;
-  gap: 0.6rem;
-  max-width: 420px;
-}
+  .sidebar {
+    /* sm:relative (no sm:static): "static" no crea contexto de posicionamiento,
+       y el botón de contraer necesita anclarse a este elemento con absolute. */
+    @apply fixed inset-y-0 left-0 z-40 flex w-64 flex-col gap-1 border-r border-border bg-surface p-3 transition-transform duration-200 sm:relative sm:z-auto sm:translate-x-0;
+  }
 
-label {
-  font-size: 0.9rem;
-}
+  .sidebar-oculto-mobile {
+    /* sm:translate-x-0 de nuevo acá: sin esto, esta regla (sin media query)
+       le gana en el cascade a la de arriba y el sidebar queda oculto siempre. */
+    @apply -translate-x-full sm:translate-x-0;
+  }
 
-input,
-select,
-button {
-  padding: 0.4rem;
-  font-size: 1rem;
-}
+  .sidebar-visible-mobile {
+    @apply translate-x-0;
+  }
 
-button {
-  cursor: pointer;
-  width: fit-content;
-  padding: 0.5rem 1.2rem;
-}
+  .sidebar-colapsado {
+    @apply sm:w-16;
+  }
 
-table {
-  border-collapse: collapse;
-  width: 100%;
-  margin-top: 0.5rem;
-}
+  .sidebar-backdrop {
+    @apply fixed inset-0 z-30 bg-black/40 sm:hidden;
+  }
 
-th,
-td {
-  border: 1px solid #8884;
-  padding: 0.4rem 0.6rem;
-  text-align: right;
-  font-size: 0.9rem;
-}
+  .sidebar-nav {
+    /* sm:mt-8: deja lugar arriba para el botón circular de contraer (absolute,
+       solo visible desde sm en adelante). */
+    @apply flex flex-1 flex-col gap-1 sm:mt-8;
+  }
 
-th:first-child,
-td:first-child {
-  text-align: left;
-}
+  .sidebar-item {
+    @apply flex items-center gap-3 rounded-lg px-2.5 py-2.5 text-sm font-medium text-muted hover:bg-canvas hover:text-ink;
+  }
 
-.error {
-  color: #c0392b;
-}
+  .sidebar-item span {
+    @apply truncate;
+  }
 
-.resumen {
-  margin: 1rem 0;
-  padding: 0.75rem 1rem;
-  border: 1px solid #8884;
-  border-radius: 6px;
+  .sidebar-item-activo {
+    @apply bg-primary/10 text-primary hover:bg-primary/10 hover:text-primary;
+  }
+
+  .sidebar-toggle {
+    /* Botón circular "enganchado" en el borde derecho del sidebar, mitad
+       adentro mitad afuera — el patrón típico de sidebars colapsables. */
+    @apply absolute top-5 -right-3 hidden h-6 w-6 items-center justify-center rounded-full border border-border bg-surface text-muted shadow-sm hover:text-ink sm:flex cursor-pointer;
+  }
+
+  /* --- Topbar: ocupa todo el ancho, arriba del sidebar y del contenido --- */
+
+  .topbar {
+    @apply sticky top-0 z-30 flex items-center gap-3 border-b border-border bg-surface px-4 py-3 sm:px-6;
+  }
+
+  .topbar-menu-btn {
+    @apply flex items-center justify-center rounded-lg p-1.5 text-muted hover:bg-canvas hover:text-ink sm:hidden cursor-pointer;
+  }
+
+  .topbar-marca {
+    @apply text-base font-bold tracking-tight;
+  }
+
+  .topbar-acciones {
+    @apply ml-auto flex items-center gap-3;
+  }
+
+  .theme-toggle {
+    @apply flex items-center justify-center rounded-lg p-2 text-muted hover:bg-canvas hover:text-ink cursor-pointer;
+  }
+
+  .perfil {
+    @apply flex items-center gap-3 border-l border-border pl-3;
+  }
+
+  .perfil-avatar {
+    @apply flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary;
+  }
+
+  .perfil-info {
+    @apply flex min-w-0 flex-col leading-tight;
+  }
+
+  .perfil-nombre {
+    @apply max-w-40 truncate text-sm font-semibold sm:max-w-60;
+  }
+
+  .perfil-cuit {
+    @apply text-xs text-muted;
+  }
+
+  .btn-link {
+    @apply flex items-center bg-transparent p-1.5 text-muted hover:text-danger cursor-pointer;
+  }
+
+  .contenido {
+    @apply flex-1 px-4 pt-6 pb-10 sm:px-5 sm:pt-8 sm:pb-12;
+  }
+
+  .pagina {
+    @apply mx-auto max-w-2xl;
+  }
+
+  .pagina.angosta {
+    @apply max-w-md;
+  }
+
+  .pagina.ancha {
+    @apply max-w-5xl;
+  }
+
+  .card {
+    @apply rounded-xl border border-border bg-surface p-4 shadow-sm sm:p-6;
+  }
+
+  form {
+    @apply grid gap-4;
+  }
+
+  label {
+    @apply grid gap-1.5 text-sm font-medium text-muted;
+  }
+
+  .grid-2 {
+    @apply grid grid-cols-2 gap-4 max-[480px]:grid-cols-1;
+  }
+
+  button[type="submit"],
+  .btn-primario {
+    @apply w-full justify-self-stretch rounded-lg bg-primary px-6 py-2.5 text-sm font-semibold text-primary-contrast transition-colors hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-60 cursor-pointer sm:w-auto sm:justify-self-start;
+  }
+
+  .btn-secundario {
+    @apply w-full justify-self-stretch rounded-lg border border-border px-4 py-2 text-sm font-medium text-ink hover:border-primary hover:text-primary disabled:cursor-not-allowed disabled:opacity-60 cursor-pointer sm:w-auto sm:justify-self-start;
+  }
+
+  .error {
+    @apply mb-5 rounded-lg bg-danger-bg px-3.5 py-2.5 text-sm text-danger;
+  }
+
+  .ayuda {
+    @apply m-0 text-sm text-muted;
+  }
+
+  .ocr {
+    @apply mb-7 grid gap-3 rounded-xl border border-dashed border-border p-5;
+  }
+
+  .enlace-secundario {
+    @apply mt-5 text-sm text-muted;
+  }
+
+  .enlace-secundario a {
+    @apply font-medium text-primary hover:underline;
+  }
+
+  .navegacion-meses {
+    @apply mb-5 flex justify-between text-sm;
+  }
+
+  .navegacion-meses a {
+    @apply font-medium text-primary hover:underline;
+  }
+
+  .resumen {
+    @apply mb-6 grid grid-cols-2 gap-4 max-[480px]:grid-cols-1;
+  }
+
+  .resumen-4 {
+    @apply grid-cols-4 max-[800px]:grid-cols-2 max-[480px]:grid-cols-1;
+  }
+
+  .aviso-wip {
+    @apply mb-6 flex items-start gap-3 rounded-xl border border-dashed border-border bg-canvas p-4 text-sm text-muted [&_strong]:text-ink [&_svg]:mt-0.5 [&_svg]:shrink-0 [&_svg]:text-primary;
+  }
+
+  .stat {
+    @apply rounded-xl border border-border bg-surface p-5;
+  }
+
+  .stat .etiqueta {
+    @apply m-0 mb-1 text-sm text-muted;
+  }
+
+  .stat .valor {
+    @apply m-0 text-2xl font-bold tabular-nums;
+  }
+
+  .tabla-wrap {
+    @apply overflow-x-auto rounded-xl border border-border;
+  }
+
+  table {
+    @apply w-full border-collapse text-sm;
+  }
+
+  thead th {
+    @apply whitespace-nowrap border-b border-border bg-canvas px-3.5 py-2.5 text-right font-semibold text-muted;
+  }
+
+  thead th:first-child,
+  tbody td:first-child {
+    @apply text-left;
+  }
+
+  tbody td {
+    @apply border-b border-border px-3.5 py-2.5 tabular-nums;
+  }
+
+  tbody tr:last-child td {
+    @apply border-b-0;
+  }
+
+  tbody tr:hover {
+    @apply bg-canvas;
+  }
+
+  .vacio {
+    @apply rounded-xl border border-dashed border-border p-5 text-center text-sm text-muted;
+  }
+
+  .badge {
+    @apply inline-flex items-center gap-1 rounded-full border border-border bg-canvas px-2 py-0.5 text-xs font-semibold;
+  }
+
+  .badge-ok {
+    @apply border-primary/30 bg-primary/10 text-primary;
+  }
+
+  .badge-warn {
+    /* amber-400 (oscuro, el default) vs amber-600 (claro) a mano: el tema acá
+       se controla con el atributo data-theme, no con prefers-color-scheme,
+       así que la variante dark: de Tailwind no refleja el tema real de la app. */
+    @apply border-amber-500/30 bg-amber-500/10 text-amber-400;
+  }
+
+  :root[data-theme="light"] .badge-warn {
+    @apply text-amber-600;
+  }
+
+  .badge-danger {
+    @apply border-danger/30 bg-danger-bg text-danger;
+  }
 }

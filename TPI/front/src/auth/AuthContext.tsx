@@ -1,9 +1,12 @@
-import { createContext, useContext, useMemo, useState, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import { api } from "../api/client";
+import type { Contribuyente } from "../types/dominio";
 
 const CLAVE_SESION = "tpi_token";
 
 interface AuthContextValue {
   token: string | null;
+  perfil: Contribuyente | null;
   login: (token: string) => void;
   logout: () => void;
 }
@@ -12,10 +15,23 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [token, setToken] = useState<string | null>(() => sessionStorage.getItem(CLAVE_SESION));
+  const [perfil, setPerfil] = useState<Contribuyente | null>(null);
+
+  useEffect(() => {
+    if (!token) {
+      setPerfil(null);
+      return;
+    }
+    api
+      .obtenerPerfil(token)
+      .then(setPerfil)
+      .catch(() => setPerfil(null));
+  }, [token]);
 
   const value = useMemo<AuthContextValue>(
     () => ({
       token,
+      perfil,
       login: (nuevoToken: string) => {
         sessionStorage.setItem(CLAVE_SESION, nuevoToken);
         setToken(nuevoToken);
@@ -25,7 +41,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setToken(null);
       },
     }),
-    [token],
+    [token, perfil],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

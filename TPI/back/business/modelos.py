@@ -50,6 +50,9 @@ class Comprobante:
     total: float
     condicion: CondicionComprobante
     origen: OrigenComprobante = OrigenComprobante.MANUAL
+    numero_arca: int = None
+    cae: str = None
+    cae_vencimiento: date = None
     id: int = None
 
 

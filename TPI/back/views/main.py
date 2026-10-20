@@ -11,14 +11,18 @@ from business.excepciones import (
     CredencialesInvalidas,
     CuitDuplicado,
     CuitInvalido,
+    EmisionArcaInvalida,
+    EmisionArcaRechazada,
+    PasswordNoCoincide,
 )
-from views.routers import auth, comprobantes, libro_iva
+from views.routers import auth, comprobantes, libro_iva, validacion_arca
 
 app = FastAPI(title="Libro de IVA Digital", description="TPI Integrador - Grupo 2")
 
 app.include_router(auth.router, prefix="/api")
 app.include_router(comprobantes.router, prefix="/api")
 app.include_router(libro_iva.router, prefix="/api")
+app.include_router(validacion_arca.router, prefix="/api")
 
 # El front (React) vive en TPI/front y se sirve sólo si ya se corrió "npm run build".
 # En desarrollo el front corre aparte con Vite (que proxea /api a este servidor).
@@ -35,10 +39,13 @@ if FRONT_DIST.exists():
 _ERRORES_HTTP = {
     CuitInvalido: 400,
     CuitDuplicado: 409,
+    PasswordNoCoincide: 400,
     CredencialesInvalidas: 401,
     ComprobanteInvalido: 400,
     ComprobanteDuplicado: 409,
     CoeficienteInvalido: 500,
+    EmisionArcaInvalida: 400,
+    EmisionArcaRechazada: 502,
 }
 
 

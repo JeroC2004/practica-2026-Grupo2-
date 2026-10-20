@@ -10,6 +10,7 @@ class ContribuyenteRegistro(BaseModel):
     razon_social: str = Field(min_length=1)
     condicion_iva: CondicionIva
     password: str = Field(min_length=6)
+    confirmacion_password: str = Field(min_length=6)
 
 
 class ContribuyenteOut(BaseModel):
@@ -38,6 +39,24 @@ class ComprobanteIn(BaseModel):
     condicion: CondicionComprobante
 
 
+class ComprobanteOcrOut(BaseModel):
+    """Campos detectados por OCR sobre la foto de un comprobante, sin confirmar.
+
+    Todos son opcionales: el OCR nunca es 100% preciso, así que el usuario
+    revisa y completa en el formulario lo que no se haya podido reconocer.
+    """
+
+    tipo: TipoComprobante | None = None
+    punto_venta: int | None = None
+    numero: int | None = None
+    fecha: date | None = None
+    cuit_contraparte: str | None = None
+    neto_gravado: float | None = None
+    neto_exento: float | None = None
+    iva: float | None = None
+    total: float | None = None
+
+
 class ComprobanteOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
@@ -53,6 +72,25 @@ class ComprobanteOut(BaseModel):
     total: float
     condicion: CondicionComprobante
     origen: str
+    numero_arca: int | None = None
+    cae: str | None = None
+    cae_vencimiento: date | None = None
+
+
+class EstadoArca(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    comprobante_id: int
+    tipo: TipoComprobante
+    punto_venta: int
+    numero: int
+    numero_arca: int | None = None
+    fecha: date
+    total: float
+    estado: str
+    cae: str | None = None
+    cae_vencimiento: date | None = None
+    total_en_arca: float | None = None
 
 
 class LibroIvaOut(BaseModel):

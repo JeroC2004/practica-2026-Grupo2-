@@ -8,14 +8,27 @@ export function RegistroPage() {
   const [razonSocial, setRazonSocial] = useState("");
   const [condicionIva, setCondicionIva] = useState<CondicionIva>(CONDICIONES_IVA[0]);
   const [password, setPassword] = useState("");
+  const [confirmacionPassword, setConfirmacionPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
 
   async function enviar(evento: FormEvent) {
     evento.preventDefault();
     setError(null);
+
+    if (password !== confirmacionPassword) {
+      setError("Las contraseñas no coinciden.");
+      return;
+    }
+
     try {
-      await api.registrar({ cuit, razon_social: razonSocial, condicion_iva: condicionIva, password });
+      await api.registrar({
+        cuit,
+        razon_social: razonSocial,
+        condicion_iva: condicionIva,
+        password,
+        confirmacion_password: confirmacionPassword,
+      });
       navigate("/login");
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "No se pudo completar el registro.");
@@ -23,34 +36,52 @@ export function RegistroPage() {
   }
 
   return (
-    <>
+    <div className="pagina angosta">
       <h1>Registrarse</h1>
-      {error && <p className="error">{error}</p>}
-      <form onSubmit={enviar}>
-        <label>
-          CUIT (11 dígitos, sin guiones)
-          <input value={cuit} onChange={(e) => setCuit(e.target.value)} maxLength={11} minLength={11} required />
-        </label>
-        <label>
-          Razón social
-          <input value={razonSocial} onChange={(e) => setRazonSocial(e.target.value)} required />
-        </label>
-        <label>
-          Condición frente al IVA
-          <select value={condicionIva} onChange={(e) => setCondicionIva(e.target.value as CondicionIva)}>
-            {CONDICIONES_IVA.map((condicion) => (
-              <option key={condicion} value={condicion}>
-                {condicion}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label>
-          Contraseña
-          <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} minLength={6} required />
-        </label>
-        <button type="submit">Crear cuenta</button>
-      </form>
-    </>
+      <div className="card">
+        {error && <p className="error">{error}</p>}
+        <form onSubmit={enviar}>
+          <label>
+            CUIT (11 dígitos, sin guiones)
+            <input value={cuit} onChange={(e) => setCuit(e.target.value)} maxLength={11} minLength={11} required />
+          </label>
+          <label>
+            Razón social
+            <input value={razonSocial} onChange={(e) => setRazonSocial(e.target.value)} required />
+          </label>
+          <label>
+            Condición frente al IVA
+            <select value={condicionIva} onChange={(e) => setCondicionIva(e.target.value as CondicionIva)}>
+              {CONDICIONES_IVA.map((condicion) => (
+                <option key={condicion} value={condicion}>
+                  {condicion}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label>
+            Contraseña
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              minLength={6}
+              required
+            />
+          </label>
+          <label>
+            Repetir contraseña
+            <input
+              type="password"
+              value={confirmacionPassword}
+              onChange={(e) => setConfirmacionPassword(e.target.value)}
+              minLength={6}
+              required
+            />
+          </label>
+          <button type="submit">Crear cuenta</button>
+        </form>
+      </div>
+    </div>
   );
 }

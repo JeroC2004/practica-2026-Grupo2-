@@ -1,6 +1,7 @@
 # Fase 1 - Datos y Negocio
 SQLAlchemy==2.0.49
 pytest==9.0.3
+python-dotenv==1.2.2
 
 # Fase 2 - Presentacion (FastAPI + API JSON; el front vive en TPI/front)
 fastapi==0.136.1
@@ -11,8 +12,10 @@ PyJWT==2.15.1
 # Fase 3 - OCR
 # Requiere ademas instalar el binario de Tesseract OCR en el sistema
 # (no alcanza con el paquete de pip). Ver TPI/README.md.
-opencv-python
-pytesseract
+opencv-python==5.0.0.93
+pytesseract==0.3.13
 
-# Fase 4 - Validacion contra ARCA (homologacion)
-pyafipws
+# Fase 4 - Emision/validacion contra ARCA (homologacion, via Afip SDK)
+# Usa el CUIT de desarrollo compartido de Afip SDK, sin certificado propio.
+# Requiere un access_token gratis de https://app.afipsdk.com en ARCA_TOKEN (ver .env).
+afip.py==1.2.0

@@ -1,7 +1,7 @@
 import os
 from contextlib import contextmanager
 
-from sqlalchemy import create_engine, Column, Integer, String, Float, Date
+from sqlalchemy import create_engine, inspect, text, Column, Integer, String, Float, Date
 from sqlalchemy.orm import declarative_base, sessionmaker
 
 DB_PATH = os.environ.get("DB_PATH", os.path.join(os.path.dirname(__file__), "..", "tpi.db"))
@@ -37,10 +37,37 @@ class ComprobanteORM(Base):
     total = Column(Float, nullable=False, default=0.0)
     condicion = Column(String(10), nullable=False)
     origen = Column(String(10), nullable=False, default="manual")
+    numero_arca = Column(Integer, nullable=True)
+    cae = Column(String(20), nullable=True)
+    cae_vencimiento = Column(Date, nullable=True)
+
+
+_COLUMNAS_NUEVAS_COMPROBANTES = {
+    "numero_arca": "INTEGER",
+    "cae": "VARCHAR(20)",
+    "cae_vencimiento": "DATE",
+}
 
 
 def crear_esquema():
     Base.metadata.create_all(engine)
+    _migrar_columnas_nuevas()
+
+
+def _migrar_columnas_nuevas():
+    """
+    create_all() crea tablas que faltan, pero no agrega columnas nuevas a una
+    tabla que ya existe de una versión anterior. Este ALTER TABLE evita tener
+    que borrar la base de datos cada vez que el modelo gana un campo.
+    """
+    inspector = inspect(engine)
+    if "comprobantes" not in inspector.get_table_names():
+        return
+    columnas_existentes = {columna["name"] for columna in inspector.get_columns("comprobantes")}
+    with engine.begin() as conexion:
+        for nombre, tipo_sql in _COLUMNAS_NUEVAS_COMPROBANTES.items():
+            if nombre not in columnas_existentes:
+                conexion.execute(text(f"ALTER TABLE comprobantes ADD COLUMN {nombre} {tipo_sql}"))
 
 
 @contextmanager

@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% block title %}Agregar ejercicio{% endblock %}
+
+{% block content %}
+<a class="back" href="/session/{{ session['id'] }}">Volver a la sesión</a>
+<h1>Agregar ejercicio</h1>
+<p style="color:var(--muted); margin-bottom:1.4rem; font-size:.9rem;">Sesión del {{ session['date'] }}</p>
+
+<div class="card">
+  <div class="form-row">
+    <div class="form-group" style="grid-column: span 2;">
+      <label for="name">Nombre del ejercicio</label>
+      <input type="text" id="name" placeholder="Ej: Press de banca" />
+    </div>
+    <div class="form-group">
+      <label for="muscle">Músculo</label>
+      <select id="muscle">
+        <option value="">— Seleccioná —</option>
+        <option>Tren superior</option>
+        <option>Tren inferior</option>
+        <option>Abdomen</option>
+        <option>Cardio</option>
+        <option>Full body</option>
+      </select>
+    </div>
+  </div>
+  <div class="form-row">
+    <div class="form-group">
+      <label for="sets">Series</label>
+      <input type="number" id="sets" min="1" placeholder="4" />
+    </div>
+    <div class="form-group">
+      <label for="reps">Repeticiones</label>
+      <input type="number" id="reps" min="1" placeholder="10" />
+    </div>
+    <div class="form-group">
+      <label for="weight_kg">Peso (kg)</label>
+      <input type="number" id="weight_kg" min="0" step="0.5" placeholder="60" />
+    </div>
+  </div>
+  <div class="actions">
+    <a class="btn btn-primary" id="btn-add" href="#">Guardar ejercicio</a>
+    <a class="btn btn-outline" id="btn-add-more" href="#">Guardar y agregar otro</a>
+    <a class="btn btn-outline" href="/session/{{ session['id'] }}">Cancelar</a>
+  </div>
+</div>
+
+<script>
+  const sessionId = "{{ session['id'] }}";
+
+  function buildUrl() {
+    const name      = document.getElementById('name').value.trim();
+    const muscle    = document.getElementById('muscle').value;
+    const sets      = document.getElementById('sets').value;
+    const reps      = document.getElementById('reps').value;
+    const weight_kg = document.getElementById('weight_kg').value;
+    if (!name) { alert('Ingresá el nombre del ejercicio.'); return null; }
+    return `/session/${sessionId}/insert-exercise?name=${encodeURIComponent(name)}&muscle=${encodeURIComponent(muscle)}&sets=${encodeURIComponent(sets)}&reps=${encodeURIComponent(reps)}&weight_kg=${encodeURIComponent(weight_kg)}`;
+  }
+
+  document.getElementById('btn-add').addEventListener('click', function(e) {
+    e.preventDefault();
+    const url = buildUrl();
+    if (url) window.location.href = url;
+  });
+
+  // Guardar y volver al mismo form (Flask redirige a session, nosotros volvemos a add-exercise)
+  document.getElementById('btn-add-more').addEventListener('click', async function(e) {
+    e.preventDefault();
+    const url = buildUrl();
+    if (!url) return;
+    // Hacemos fetch silencioso y recargamos el form
+    await fetch(url.replace('/insert-exercise', '/insert-exercise'), { redirect: 'manual' });
+    // Simplificado: redirigimos al insert que redirige a session, luego volvemos aquí
+    // Mejor: redirigir al insert con next param no soportado en este app, así que usamos fetch + reload
+    window.location.href = url.replace('insert-exercise', 'insert-exercise') + '&_next=add';
+  });
+</script>
+{% endblock %}

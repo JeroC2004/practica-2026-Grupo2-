@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% block title %}Sesión {{ session['date'] }}{% endblock %}
+
+{% block content %}
+<a class="back" href="/">Volver</a>
+
+<div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem; margin-bottom:1.4rem;">
+  <h1 style="margin-bottom:0">{{ session['date'] }}</h1>
+  <div class="actions" style="margin-top:0">
+    <a class="btn btn-primary" href="/session/{{ session['id'] }}/add-exercise">+ Ejercicio</a>
+    <a class="btn btn-danger btn-sm" href="/delete/{{ session['id'] }}"
+       onclick="return confirm('¿Eliminar esta sesión y todos sus ejercicios?')">Eliminar sesión</a>
+  </div>
+</div>
+
+<!-- META -->
+<div class="meta" style="margin-bottom:1.5rem; font-size:.9rem;">
+  {% if session['duration_min'] %}
+    <span>⏱ <strong>{{ session['duration_min'] }} min</strong></span>
+  {% endif %}
+  <span>🏋️ <strong>{{ exercises|length }}</strong> ejercicio{% if exercises|length != 1 %}s{% endif %}</span>
+  {% if session['notes'] %}
+    <span>📝 {{ session['notes'] }}</span>
+  {% endif %}
+</div>
+
+<!-- TABLA DE EJERCICIOS -->
+{% if exercises %}
+<div class="card" style="padding:0; overflow:hidden;">
+  <table>
+    <thead>
+      <tr>
+        <th>Ejercicio</th>
+        <th>Músculo</th>
+        <th>Series</th>
+        <th>Reps</th>
+        <th>Peso (kg)</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for ex in exercises %}
+      <tr>
+        <td><strong>{{ ex['name'] }}</strong></td>
+        <td>
+          {% if ex['muscle'] %}
+            <span class="badge">{{ ex['muscle'] }}</span>
+          {% else %}—{% endif %}
+        </td>
+        <td>{{ ex['sets'] if ex['sets'] else '—' }}</td>
+        <td>{{ ex['reps'] if ex['reps'] else '—' }}</td>
+        <td>{{ ex['weight_kg'] if ex['weight_kg'] else '—' }}</td>
+        <td>
+          <a class="btn btn-danger btn-sm"
+             href="/exercise/delete/{{ ex['id'] }}"
+             onclick="return confirm('¿Eliminar este ejercicio?')">✕</a>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+  <div class="empty" style="padding:2.5rem 1rem;">
+    <p>No hay ejercicios todavía. <a href="/session/{{ session['id'] }}/add-exercise">Agregá el primero</a>.</p>
+  </div>
+{% endif %}
+{% endblock %}

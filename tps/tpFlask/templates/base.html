@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>{% block title %}Workout Tracker{% endblock %}</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:       #0d0f14;
+      --surface:  #161921;
+      --surface2: #1e2230;
+      --border:   #2c3044;
+      --accent:   #e8643a;
+      --accent2:  #f0875f;
+      --text:     #dde1f0;
+      --muted:    #636880;
+      --green:    #4ade80;
+      --red:      #f87171;
+      --radius:   10px;
+      --font:     'Segoe UI', system-ui, sans-serif;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    nav {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 0 2rem;
+      height: 56px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky; top: 0; z-index: 10;
+    }
+    .brand { font-size: 1.1rem; font-weight: 800; color: var(--accent); text-decoration: none; letter-spacing: .5px; }
+    .brand span { color: var(--text); font-weight: 400; }
+    .nav-links { display: flex; gap: .5rem; }
+
+    .btn {
+      display: inline-block;
+      padding: .42rem 1rem;
+      border-radius: var(--radius);
+      font-size: .83rem;
+      font-weight: 600;
+      text-decoration: none;
+      border: none;
+      cursor: pointer;
+      transition: opacity .15s, transform .1s;
+    }
+    .btn:hover { opacity: .85; transform: translateY(-1px); }
+    .btn-primary { background: var(--accent);  color: #fff; }
+    .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text); }
+    .btn-outline:hover { border-color: var(--accent); color: var(--accent2); }
+    .btn-danger  { background: var(--red); color: #fff; }
+    .btn-green   { background: var(--green); color: #0d0f14; }
+    .btn-sm      { padding: .28rem .7rem; font-size: .78rem; }
+
+    main {
+      flex: 1;
+      max-width: 820px;
+      width: 100%;
+      margin: 2.5rem auto;
+      padding: 0 1.25rem;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.5rem 1.75rem;
+      margin-bottom: 1rem;
+      transition: border-color .15s;
+    }
+    .card:hover { border-color: var(--accent); }
+
+    h1 { font-size: 1.6rem; font-weight: 700; color: var(--accent2); margin-bottom: 1.4rem; }
+    h2 { font-size: 1.1rem; font-weight: 700; }
+    h2 a { color: var(--text); text-decoration: none; }
+    h2 a:hover { color: var(--accent2); }
+
+    .actions { display: flex; gap: .5rem; margin-top: 1rem; flex-wrap: wrap; }
+
+    .badge {
+      display: inline-block;
+      padding: .18rem .6rem;
+      border-radius: 99px;
+      font-size: .72rem;
+      font-weight: 700;
+      background: var(--surface2);
+      color: var(--muted);
+      border: 1px solid var(--border);
+    }
+    .badge-accent { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+    .meta { display: flex; gap: .75rem; align-items: center; margin-top: .4rem; flex-wrap: wrap; font-size: .8rem; color: var(--muted); }
+
+    .form-group { margin-bottom: 1.2rem; }
+    label { display: block; font-size: .82rem; font-weight: 600; color: var(--muted); margin-bottom: .35rem; text-transform: uppercase; letter-spacing: .5px; }
+    input, textarea, select {
+      width: 100%;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      color: var(--text);
+      font-family: var(--font);
+      font-size: .93rem;
+      padding: .65rem 1rem;
+      outline: none;
+      transition: border-color .15s;
+    }
+    input:focus, textarea:focus, select:focus { border-color: var(--accent); }
+    textarea { resize: vertical; min-height: 90px; }
+    .form-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 1rem; }
+
+    table { width: 100%; border-collapse: collapse; font-size: .875rem; }
+    th { text-align: left; padding: .6rem .75rem; font-size: .75rem; text-transform: uppercase; letter-spacing: .5px; color: var(--muted); border-bottom: 1px solid var(--border); }
+    td { padding: .65rem .75rem; border-bottom: 1px solid var(--border); }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: var(--surface2); }
+
+    .back { display: inline-block; margin-bottom: 1.4rem; color: var(--muted); font-size: .85rem; text-decoration: none; }
+    .back:hover { color: var(--accent2); }
+    .back::before { content: '← '; }
+
+    .empty { text-align: center; padding: 4rem 2rem; color: var(--muted); }
+    .empty .icon { font-size: 2.5rem; margin-bottom: .75rem; }
+    .empty a { color: var(--accent2); }
+
+    .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: .75rem; margin-bottom: 1.5rem; }
+    .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1rem 1.25rem; }
+    .stat-card .val { font-size: 1.5rem; font-weight: 800; color: var(--accent2); }
+    .stat-card .lbl { font-size: .75rem; color: var(--muted); margin-top: .2rem; }
+  </style>
+</head>
+<body>
+<nav>
+  <a class="brand" href="/">🏋️ <span>workout</span>tracker</a>
+  <div class="nav-links">
+    <a class="btn btn-outline" href="/stats">Estadísticas</a>
+    <a class="btn btn-primary" href="/create">+ Sesión</a>
+  </div>
+</nav>
+<main>
+  {% block content %}{% endblock %}
+</main>
+</body>
+</html>

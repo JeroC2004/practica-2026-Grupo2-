@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+{% block title %}Estadísticas{% endblock %}
+
+{% block content %}
+<h1>Estadísticas</h1>
+
+<div class="card">
+  <div class="form-group" style="margin-bottom:0;">
+    <label for="exercise-sel">Seleccioná un ejercicio</label>
+    <select id="exercise-sel" onchange="this.form && this.form.submit()">
+      <option value="">— Elegí un ejercicio —</option>
+      {% for ex in exercises %}
+        <option value="{{ ex['name'] }}" {% if ex['name'] == selected %}selected{% endif %}>
+          {{ ex['name'] }}
+        </option>
+      {% endfor %}
+    </select>
+  </div>
+</div>
+
+{% if selected %}
+  <h2 style="margin-bottom:1rem; color:var(--accent2);">{{ selected }}</h2>
+
+  {% if history %}
+    <!-- STATS RÁPIDAS -->
+    {% set max_weight = history | map(attribute='weight_kg') | select | list %}
+    <div class="stat-grid">
+      <div class="stat-card">
+        <div class="val">{{ history|length }}</div>
+        <div class="lbl">Veces registrado</div>
+      </div>
+      {% if max_weight %}
+      <div class="stat-card">
+        <div class="val">{{ max_weight | max }} kg</div>
+        <div class="lbl">Peso máximo</div>
+      </div>
+      {% endif %}
+      <div class="stat-card">
+        <div class="val">{{ history[-1]['date'] }}</div>
+        <div class="lbl">Última vez</div>
+      </div>
+    </div>
+
+    <!-- TABLA DE HISTORIAL -->
+    <div class="card" style="padding:0; overflow:hidden;">
+      <table>
+        <thead>
+          <tr>
+            <th>Fecha</th>
+            <th>Músculo</th>
+            <th>Series</th>
+            <th>Reps</th>
+            <th>Peso (kg)</th>
+            <th>Volumen total</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in history %}
+          <tr>
+            <td>{{ row['date'] }}</td>
+            <td>{% if row['muscle'] %}<span class="badge">{{ row['muscle'] }}</span>{% else %}—{% endif %}</td>
+            <td>{{ row['sets'] if row['sets'] else '—' }}</td>
+            <td>{{ row['reps'] if row['reps'] else '—' }}</td>
+            <td>
+              {% if row['weight_kg'] %}
+                <strong>{{ row['weight_kg'] }} kg</strong>
+              {% else %}—{% endif %}
+            </td>
+            <td>
+              {% if row['sets'] and row['reps'] and row['weight_kg'] %}
+                {{ (row['sets'] * row['reps'] * row['weight_kg']) | round(1) }} kg
+              {% else %}—{% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <div class="empty" style="padding:2rem;">
+      <p>No hay registros para <strong>{{ selected }}</strong> todavía.</p>
+    </div>
+  {% endif %}
+
+{% elif not exercises %}
+  <div class="empty">
+    <div class="icon">📊</div>
+    <p>Todavía no hay ejercicios registrados. <a href="/create">Creá tu primera sesión</a>.</p>
+  </div>
+{% endif %}
+
+<script>
+  // Auto-submit al cambiar el select
+  document.getElementById('exercise-sel').addEventListener('change', function() {
+    const val = this.value;
+    window.location.href = '/stats' + (val ? '?exercise=' + encodeURIComponent(val) : '');
+  });
+</script>
+{% endblock %}

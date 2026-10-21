@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block titulo %}Mis transcripciones{% endblock %}
+{% block contenido %}
+
+{% if transcripciones|length == 0 %}
+    <div class="vacio">
+        <p>Todavía no subiste ninguna transcripción.</p>
+        <a class="boton" href="{{ url_for('subir') }}">Subir la primera</a>
+    </div>
+{% else %}
+    {% for t in transcripciones %}
+        <div class="card">
+            <h3><a href="{{ url_for('ver_transcripcion', id_=t['id']) }}">{{ t['titulo'] }}</a></h3>
+            <div class="meta">
+                {{ t['fecha'] }}
+                {% if t['duracion_seg'] %} · {{ "%.0f"|format(t['duracion_seg']) }}s de audio{% endif %}
+            </div>
+        </div>
+    {% endfor %}
+{% endif %}
+
+{% endblock %}

@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}Nueva sesión{% endblock %}
+
+{% block content %}
+<a class="back" href="/">Volver</a>
+<h1>Nueva sesión</h1>
+
+<div class="card">
+  <div class="form-row">
+    <div class="form-group">
+      <label for="date">Fecha</label>
+      <input type="date" id="date" value="{{ today }}" />
+    </div>
+    <div class="form-group">
+      <label for="duration_min">Duración (minutos)</label>
+      <input type="number" id="duration_min" min="1" placeholder="60" />
+    </div>
+  </div>
+  <div class="form-group">
+    <label for="notes">Notas</label>
+    <textarea id="notes" placeholder="Cómo te sentiste, qué trabajaste, etc."></textarea>
+  </div>
+  <div class="actions">
+    <a class="btn btn-primary" id="btn-crear" href="#">Crear sesión</a>
+    <a class="btn btn-outline" href="/">Cancelar</a>
+  </div>
+</div>
+
+<script>
+  document.getElementById('btn-crear').addEventListener('click', function(e) {
+    e.preventDefault();
+    const date = document.getElementById('date').value.trim();
+    if (!date) { alert('Seleccioná una fecha.'); return; }
+    const duration_min = document.getElementById('duration_min').value.trim();
+    const notes = document.getElementById('notes').value.trim();
+    window.location.href = `/insert?date=${encodeURIComponent(date)}&duration_min=${encodeURIComponent(duration_min)}&notes=${encodeURIComponent(notes)}`;
+  });
+</script>
+{% endblock %}

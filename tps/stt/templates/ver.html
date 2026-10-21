@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block titulo %}{{ t['titulo'] }}{% endblock %}
+{% block contenido %}
+
+<div class="card">
+    <h3>{{ t['titulo'] }}</h3>
+    <div class="meta">
+        {{ t['fecha'] }}
+        {% if t['duracion_seg'] %} · {{ "%.0f"|format(t['duracion_seg']) }}s de audio{% endif %}
+    </div>
+    <div class="texto-transcripcion">{{ t['texto'] }}</div>
+
+    <div class="fila-acciones">
+        <a class="boton" href="{{ url_for('index') }}">← Volver</a>
+        <form action="{{ url_for('eliminar', id_=t['id']) }}" method="post"
+              onsubmit="return confirm('¿Eliminar esta transcripción?');">
+            <button class="boton" style="background:#999;" type="submit">Eliminar</button>
+        </form>
+    </div>
+</div>
+
+{% endblock %}

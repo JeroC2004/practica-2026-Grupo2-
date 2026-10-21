@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block titulo %}Nueva transcripción{% endblock %}
+{% block contenido %}
+
+<div class="card">
+    <form action="{{ url_for('subir') }}" method="post" enctype="multipart/form-data">
+        <label for="titulo">Título (opcional)</label>
+        <input type="text" id="titulo" name="titulo" placeholder="Ej: Reunión de grupo TPI - 29/07">
+
+        <label for="audio">Archivo de audio</label>
+        <input type="file" id="audio" name="audio" accept=".mp3,.wav,.m4a,.ogg,.flac,.mp4" required>
+
+        <button class="boton" type="submit">Transcribir</button>
+    </form>
+    <p style="color:#888; font-size:0.85rem; margin-top:14px;">
+        Formatos soportados: mp3, wav, m4a, ogg, flac, mp4.
+        La transcripción corre local en tu máquina, puede tardar según la duración del audio.
+    </p>
+</div>
+
+{% endblock %}

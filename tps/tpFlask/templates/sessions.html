@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}Mis entrenamientos{% endblock %}
+
+{% block content %}
+<h1>Mis entrenamientos</h1>
+
+{% if sessions %}
+  {% for s in sessions %}
+  <div class="card">
+    <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:.5rem;">
+      <div>
+        <h2><a href="/session/{{ s['id'] }}">{{ s['date'] }}</a></h2>
+        <div class="meta">
+          {% if s['duration_min'] %}
+            <span>⏱ {{ s['duration_min'] }} min</span>
+          {% endif %}
+          <span class="badge badge-accent">{{ s['total_exercises'] }} ejercicio{% if s['total_exercises'] != 1 %}s{% endif %}</span>
+          {% if s['notes'] %}
+            <span>📝 {{ s['notes'][:60] }}{% if s['notes']|length > 60 %}…{% endif %}</span>
+          {% endif %}
+        </div>
+      </div>
+      <div class="actions" style="margin-top:0">
+        <a class="btn btn-outline btn-sm" href="/session/{{ s['id'] }}">Ver</a>
+        <a class="btn btn-danger btn-sm" href="/delete/{{ s['id'] }}"
+           onclick="return confirm('¿Eliminar esta sesión y todos sus ejercicios?')">Eliminar</a>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+{% else %}
+  <div class="empty">
+    <div class="icon">🏋️</div>
+    <p>Todavía no hay sesiones. <a href="/create">Registrá tu primer entrenamiento</a>.</p>
+  </div>
+{% endif %}
+{% endblock %}

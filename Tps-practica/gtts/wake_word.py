@@ -13,7 +13,7 @@ import numpy as np
 import sounddevice as sd
 from faster_whisper import WhisperModel
 
-PALABRA_CLAVE = "asistente"
+PALABRA_CLAVE = "hola"
 SAMPLERATE = 16000
 DURACION_CHUNK = 2  # segundos por chunk de escucha
 UMBRAL_ENERGIA = 300  # descarta chunks silenciosos antes de transcribir

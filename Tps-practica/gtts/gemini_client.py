@@ -8,7 +8,7 @@ from dotenv import load_dotenv, find_dotenv
 
 load_dotenv(find_dotenv())
 
-MODELO_GEMINI = "gemini-flash-latest"
+MODELO_GEMINI = "gemini-3.8-flash"
 
 _api_key = os.getenv("GEMINI_API_KEY")
 if not _api_key:

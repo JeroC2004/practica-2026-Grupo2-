@@ -5,6 +5,7 @@ from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 
 from business.excepciones import (
+    ArcaNoConfigurada,
     CoeficienteInvalido,
     ComprobanteDuplicado,
     ComprobanteInvalido,
@@ -13,6 +14,7 @@ from business.excepciones import (
     CuitInvalido,
     EmisionArcaInvalida,
     EmisionArcaRechazada,
+    OcrNoDisponible,
     PasswordNoCoincide,
 )
 from views.routers import auth, comprobantes, libro_iva, validacion_arca
@@ -46,6 +48,8 @@ _ERRORES_HTTP = {
     CoeficienteInvalido: 500,
     EmisionArcaInvalida: 400,
     EmisionArcaRechazada: 502,
+    ArcaNoConfigurada: 503,
+    OcrNoDisponible: 503,
 }
 
 

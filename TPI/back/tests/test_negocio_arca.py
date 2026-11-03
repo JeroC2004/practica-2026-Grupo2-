@@ -39,14 +39,20 @@ class FakeArcaCliente:
         self.resultados_consultar = resultados_consultar or {}
         self.llamadas_emitir = []
 
-    def emitir(self, tipo, fecha, total, neto_gravado, iva):
-        self.llamadas_emitir.append((tipo, fecha, total, neto_gravado, iva))
+    def emitir(self, comprobante, condicion_iva_receptor=None):
+        self.llamadas_emitir.append(comprobante)
         if self.excepcion_emitir:
             raise self.excepcion_emitir
         return self.resultado_emitir
 
     def consultar(self, tipo, numero):
         return self.resultados_consultar.get(numero)
+
+
+def crear_negocio(cliente, negocio_comprobante):
+    negocio = NegocioArca(cliente=cliente, negocio_comprobante=negocio_comprobante)
+    negocio.hoy = lambda: date(2026, 3, 15)
+    return negocio
 
 
 class FakeNegocioComprobante:
@@ -75,7 +81,7 @@ class FakeNegocioComprobante:
 
 
 def test_emitir_rechaza_comprobante_inexistente():
-    negocio = NegocioArca(cliente=FakeArcaCliente(), negocio_comprobante=FakeNegocioComprobante())
+    negocio = crear_negocio(FakeArcaCliente(), FakeNegocioComprobante())
 
     with pytest.raises(EmisionArcaInvalida):
         negocio.emitir(CUIT, comprobante_id=999)
@@ -83,7 +89,7 @@ def test_emitir_rechaza_comprobante_inexistente():
 
 def test_emitir_rechaza_comprobante_de_otro_contribuyente():
     comprobante = comprobante_valido(cuit_contribuyente="20999999999")
-    negocio = NegocioArca(cliente=FakeArcaCliente(), negocio_comprobante=FakeNegocioComprobante([comprobante]))
+    negocio = crear_negocio(FakeArcaCliente(), FakeNegocioComprobante([comprobante]))
 
     with pytest.raises(EmisionArcaInvalida):
         negocio.emitir(CUIT, comprobante_id=comprobante.id)
@@ -91,7 +97,7 @@ def test_emitir_rechaza_comprobante_de_otro_contribuyente():
 
 def test_emitir_rechaza_una_compra():
     comprobante = comprobante_valido(condicion=CondicionComprobante.COMPRA)
-    negocio = NegocioArca(cliente=FakeArcaCliente(), negocio_comprobante=FakeNegocioComprobante([comprobante]))
+    negocio = crear_negocio(FakeArcaCliente(), FakeNegocioComprobante([comprobante]))
 
     with pytest.raises(EmisionArcaInvalida):
         negocio.emitir(CUIT, comprobante_id=comprobante.id)
@@ -99,7 +105,7 @@ def test_emitir_rechaza_una_compra():
 
 def test_emitir_rechaza_un_comprobante_ya_emitido():
     comprobante = comprobante_valido(cae="86410988122530")
-    negocio = NegocioArca(cliente=FakeArcaCliente(), negocio_comprobante=FakeNegocioComprobante([comprobante]))
+    negocio = crear_negocio(FakeArcaCliente(), FakeNegocioComprobante([comprobante]))
 
     with pytest.raises(EmisionArcaInvalida):
         negocio.emitir(CUIT, comprobante_id=comprobante.id)
@@ -108,21 +114,19 @@ def test_emitir_rechaza_un_comprobante_ya_emitido():
 def test_emitir_exitoso_guarda_numero_y_cae():
     comprobante = comprobante_valido()
     cliente = FakeArcaCliente()
-    negocio = NegocioArca(cliente=cliente, negocio_comprobante=FakeNegocioComprobante([comprobante]))
+    negocio = crear_negocio(cliente, FakeNegocioComprobante([comprobante]))
 
     resultado = negocio.emitir(CUIT, comprobante_id=comprobante.id)
 
     assert resultado.numero_arca == 555
     assert resultado.cae == "86410988122530"
-    assert cliente.llamadas_emitir == [
-        (TipoComprobante.FACTURA_B, date(2026, 3, 15), 1210.0, 1000.0, 210.0)
-    ]
+    assert cliente.llamadas_emitir == [comprobante]
 
 
 def test_emitir_cuando_arca_rechaza_levanta_excepcion_propia():
     comprobante = comprobante_valido()
     cliente = FakeArcaCliente(excepcion_emitir=Exception("ARCA rechazó el comprobante: dato inválido"))
-    negocio = NegocioArca(cliente=cliente, negocio_comprobante=FakeNegocioComprobante([comprobante]))
+    negocio = crear_negocio(cliente, FakeNegocioComprobante([comprobante]))
 
     with pytest.raises(EmisionArcaRechazada):
         negocio.emitir(CUIT, comprobante_id=comprobante.id)
@@ -130,7 +134,7 @@ def test_emitir_cuando_arca_rechaza_levanta_excepcion_propia():
 
 def test_validar_mes_sin_numero_arca_queda_pendiente():
     comprobante = comprobante_valido()
-    negocio = NegocioArca(cliente=FakeArcaCliente(), negocio_comprobante=FakeNegocioComprobante([comprobante]))
+    negocio = crear_negocio(FakeArcaCliente(), FakeNegocioComprobante([comprobante]))
 
     resultado = negocio.validar_mes(CUIT, mes=3, anio=2026)
 
@@ -139,8 +143,10 @@ def test_validar_mes_sin_numero_arca_queda_pendiente():
 
 def test_validar_mes_confirmado_cuando_arca_tiene_el_comprobante():
     comprobante = comprobante_valido(numero_arca=555, cae="86410988122530")
-    cliente = FakeArcaCliente(resultados_consultar={555: {"ImpTotal": 1210.0}})
-    negocio = NegocioArca(cliente=cliente, negocio_comprobante=FakeNegocioComprobante([comprobante]))
+    cliente = FakeArcaCliente(resultados_consultar={
+            555: {"fecha": date(2026, 3, 15), "neto": 1000.0, "iva": 210.0, "total": 1210.0, "cae": "86410988122530"}
+        })
+    negocio = crear_negocio(cliente, FakeNegocioComprobante([comprobante]))
 
     resultado = negocio.validar_mes(CUIT, mes=3, anio=2026)
 
@@ -151,7 +157,7 @@ def test_validar_mes_confirmado_cuando_arca_tiene_el_comprobante():
 def test_validar_mes_no_encontrado_cuando_arca_no_lo_tiene():
     comprobante = comprobante_valido(numero_arca=555, cae="86410988122530")
     cliente = FakeArcaCliente(resultados_consultar={})
-    negocio = NegocioArca(cliente=cliente, negocio_comprobante=FakeNegocioComprobante([comprobante]))
+    negocio = crear_negocio(cliente, FakeNegocioComprobante([comprobante]))
 
     resultado = negocio.validar_mes(CUIT, mes=3, anio=2026)
 

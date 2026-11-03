@@ -332,4 +332,12 @@
   .badge-danger {
     @apply border-danger/30 bg-danger-bg text-danger;
   }
+
+  .diferencias {
+    @apply m-0 mt-1.5 list-none p-0 text-xs text-muted;
+  }
+
+  .diferencias strong {
+    @apply font-semibold text-ink;
+  }
 }

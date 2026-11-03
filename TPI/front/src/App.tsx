@@ -28,6 +28,7 @@ function Rutas() {
         <Route path="/comprobantes/nuevo" element={<NuevoComprobantePage />} />
         <Route path="/libro-iva/:anio/:mes" element={<LibroIvaPage />} />
         <Route path="/validacion-arca" element={<ValidacionArcaPage />} />
+        <Route path="/validacion-arca/:anio/:mes" element={<ValidacionArcaPage />} />
       </Route>
       <Route path="/" element={<Inicio />} />
     </Routes>

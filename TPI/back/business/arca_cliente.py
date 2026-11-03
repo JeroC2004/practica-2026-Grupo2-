@@ -3,11 +3,20 @@ from datetime import datetime
 
 from afip import Afip
 
-from business.modelos import TipoComprobante
+from business.excepciones import ArcaNoConfigurada
+from business.modelos import CondicionIva, TipoComprobante
 
-PUNTO_VENTA_HOMOLOGACION = 1
+# El CUIT de desarrollo es compartido por todos los usuarios de Afip SDK, y en
+# el punto de venta 1 hay comprobantes de terceros con fecha futura: ARCA no
+# deja autorizar uno con fecha anterior al último (error 10016). Por eso se
+# usa por defecto un punto de venta poco usado, configurable con ARCA_PUNTO_VENTA.
+PUNTO_VENTA_HOMOLOGACION = 4242
+
+DOC_TIPO_CUIT = 80
+DOC_TIPO_SIN_IDENTIFICAR = 99
+CONDICION_IVA_RESPONSABLE_INSCRIPTO = 1
 CONDICION_IVA_CONSUMIDOR_FINAL = 5
-ALICUOTA_IVA_21_POR_CIENTO = 5
+CONDICION_IVA_MONOTRIBUTO = 6
 
 CUIT_DESARROLLO_AFIPSDK = 20409378472
 
@@ -18,6 +27,22 @@ _CODIGO_AFIP_POR_TIPO = {
     TipoComprobante.NOTA_CREDITO: 8,
     TipoComprobante.NOTA_DEBITO: 7,
 }
+
+# Tabla de alícuotas de IVA de ARCA (FEParamGetTiposIva): tasa -> Id.
+_ID_ALICUOTA_POR_TASA = {0.0: 3, 0.025: 9, 0.05: 8, 0.105: 4, 0.21: 5, 0.27: 6}
+
+
+def id_alicuota_iva(neto_gravado, iva):
+    """
+    Deduce el Id de alícuota de ARCA a partir del neto gravado y el IVA.
+    :rtype: int, o None si la proporción no corresponde a ninguna alícuota vigente
+    """
+    if neto_gravado <= 0:
+        return None
+    for tasa, id_alicuota in _ID_ALICUOTA_POR_TASA.items():
+        if abs(round(neto_gravado * tasa, 2) - iva) <= 0.01:
+            return id_alicuota
+    return None
 
 
 class ArcaCliente:
@@ -34,14 +59,22 @@ class ArcaCliente:
     (getLastVoucher, createVoucher) que tienen ese bug.
     """
 
-    def __init__(self, cuit=None, access_token=None):
+    def __init__(self, cuit=None, access_token=None, punto_venta=None):
         self.cuit = cuit or CUIT_DESARROLLO_AFIPSDK
-        self.afip = Afip({"CUIT": self.cuit, "access_token": access_token or os.environ["ARCA_TOKEN"]})
+        self.access_token = access_token or os.environ.get("ARCA_TOKEN")
+        self.punto_venta = punto_venta or int(os.environ.get("ARCA_PUNTO_VENTA") or PUNTO_VENTA_HOMOLOGACION)
+        self._afip = None
 
     def _ejecutar(self, metodo, params):
-        ta = self.afip.getServiceTA("wsfe")
+        if not self.access_token:
+            raise ArcaNoConfigurada(
+                "Falta configurar ARCA_TOKEN en TPI/.env (se obtiene gratis en https://app.afipsdk.com)."
+            )
+        if self._afip is None:
+            self._afip = Afip({"CUIT": self.cuit, "access_token": self.access_token})
+        ta = self._afip.getServiceTA("wsfe")
         auth = {"Token": ta["token"], "Sign": ta["sign"], "Cuit": self.cuit}
-        servicio = self.afip.ElectronicBilling
+        servicio = self._afip.ElectronicBilling
         servicio.soapv12 = False
         return servicio.executeRequest(metodo, {"Auth": auth, **params})
 
@@ -54,6 +87,13 @@ class ArcaCliente:
         """
         return resultado.get(clave, resultado)
 
+    @staticmethod
+    def _como_lista(valor):
+        """ARCA devuelve un dict suelto cuando hay un solo elemento, y una lista cuando hay varios."""
+        if valor is None:
+            return []
+        return valor if isinstance(valor, list) else [valor]
+
     def ultimo_numero(self, tipo):
         """
         Último número de comprobante autorizado por ARCA para ese tipo, en el
@@ -61,56 +101,102 @@ class ArcaCliente:
         :rtype: int
         """
         resultado = self._ejecutar(
-            "FECompUltimoAutorizado", {"PtoVta": PUNTO_VENTA_HOMOLOGACION, "CbteTipo": _CODIGO_AFIP_POR_TIPO[tipo]}
+            "FECompUltimoAutorizado", {"PtoVta": self.punto_venta, "CbteTipo": _CODIGO_AFIP_POR_TIPO[tipo]}
         )
         return self._desenvolver(resultado, "FECompUltimoAutorizadoResult")["CbteNro"]
 
-    def emitir(self, tipo, fecha, total, neto_gravado, iva):
+    @staticmethod
+    def _receptor(comprobante, condicion_iva_receptor=None):
+        """
+        La factura A exige identificar al receptor por CUIT, y que sea
+        Responsable Inscripto o Monotributista; B y C se emiten a consumidor final.
+        """
+        if comprobante.tipo == TipoComprobante.FACTURA_A:
+            es_monotributo = condicion_iva_receptor == CondicionIva.MONOTRIBUTO
+            return {
+                "DocTipo": DOC_TIPO_CUIT,
+                "DocNro": int(comprobante.cuit_contraparte),
+                "CondicionIVAReceptorId": (
+                    CONDICION_IVA_MONOTRIBUTO if es_monotributo else CONDICION_IVA_RESPONSABLE_INSCRIPTO
+                ),
+            }
+        return {
+            "DocTipo": DOC_TIPO_SIN_IDENTIFICAR,
+            "DocNro": 0,
+            "CondicionIVAReceptorId": CONDICION_IVA_CONSUMIDOR_FINAL,
+        }
+
+    @staticmethod
+    def _importes(comprobante):
+        """
+        La factura C (monotributo) no discrimina IVA: todo va como neto y sin
+        bloque "Iva". A y B separan neto gravado, exento e IVA por alícuota.
+        """
+        total = round(comprobante.total, 2)
+        if comprobante.tipo == TipoComprobante.FACTURA_C:
+            return {"ImpTotal": total, "ImpTotConc": 0, "ImpNeto": total, "ImpOpEx": 0, "ImpIVA": 0, "ImpTrib": 0}
+
+        neto_gravado = round(comprobante.neto_gravado, 2)
+        iva = round(comprobante.iva, 2)
+        importes = {
+            "ImpTotal": total,
+            "ImpTotConc": 0,
+            "ImpNeto": neto_gravado,
+            "ImpOpEx": round(comprobante.neto_exento, 2),
+            "ImpIVA": iva,
+            "ImpTrib": 0,
+        }
+        if neto_gravado > 0:
+            alicuota = {"Id": id_alicuota_iva(neto_gravado, iva), "BaseImp": neto_gravado, "Importe": iva}
+            importes["Iva"] = {"AlicIva": alicuota}
+        return importes
+
+    def emitir(self, comprobante, condicion_iva_receptor=None):
         """
         Pide a ARCA el próximo número para este tipo de comprobante y lo emite.
+        :type comprobante: Comprobante
+        :type condicion_iva_receptor: CondicionIva, si el receptor está registrado en el sistema
         :rtype: dict con numero_arca, cae y cae_vencimiento
         :raise: Exception si ARCA rechaza el comprobante (ver "Observaciones")
         """
-        numero = self.ultimo_numero(tipo) + 1
+        ultimo = self.ultimo_numero(comprobante.tipo)
+        anterior = self.consultar(comprobante.tipo, ultimo) if ultimo else None
+        if anterior and comprobante.fecha < anterior["fecha"]:
+            raise Exception(
+                f"ARCA ya autorizó en el punto de venta {self.punto_venta} un comprobante con fecha "
+                f"{anterior['fecha']:%d/%m/%Y}, y no acepta uno con fecha anterior ({comprobante.fecha:%d/%m/%Y}). "
+                "Usá esa fecha o una posterior, o cambiá ARCA_PUNTO_VENTA en el .env."
+            )
+        numero = ultimo + 1
         datos = {
             "FeCAEReq": {
                 "FeCabReq": {
                     "CantReg": 1,
-                    "PtoVta": PUNTO_VENTA_HOMOLOGACION,
-                    "CbteTipo": _CODIGO_AFIP_POR_TIPO[tipo],
+                    "PtoVta": self.punto_venta,
+                    "CbteTipo": _CODIGO_AFIP_POR_TIPO[comprobante.tipo],
                 },
                 "FeDetReq": {
                     "FECAEDetRequest": {
                         "Concepto": 1,
-                        "DocTipo": 99,
-                        "DocNro": 0,
+                        **self._receptor(comprobante, condicion_iva_receptor),
                         "CbteDesde": numero,
                         "CbteHasta": numero,
-                        "CbteFch": fecha.strftime("%Y%m%d"),
-                        "ImpTotal": total,
-                        "ImpTotConc": 0,
-                        "ImpNeto": neto_gravado,
-                        "ImpOpEx": 0,
-                        "ImpIVA": iva,
-                        "ImpTrib": 0,
+                        "CbteFch": comprobante.fecha.strftime("%Y%m%d"),
+                        **self._importes(comprobante),
                         "MonId": "PES",
                         "MonCotiz": 1,
-                        "CondicionIVAReceptorId": CONDICION_IVA_CONSUMIDOR_FINAL,
-                        "Iva": {
-                            "AlicIva": {"Id": ALICUOTA_IVA_21_POR_CIENTO, "BaseImp": neto_gravado, "Importe": iva}
-                        },
                     }
                 },
             }
         }
         respuesta = self._desenvolver(self._ejecutar("FECAESolicitar", datos), "FECAESolicitarResult")
-        detalle_respuesta = respuesta["FeDetResp"]["FECAEDetResponse"]
-        detalle = detalle_respuesta[0] if isinstance(detalle_respuesta, list) else detalle_respuesta
+        detalle = self._como_lista(respuesta["FeDetResp"]["FECAEDetResponse"])[0]
 
         if detalle["Resultado"] != "A":
-            observaciones = detalle.get("Observaciones", {}).get("Obs", [])
-            mensajes = "; ".join(obs["Msg"] for obs in observaciones) or "motivo desconocido"
-            raise Exception(f"ARCA rechazó el comprobante: {mensajes}")
+            observaciones = self._como_lista((detalle.get("Observaciones") or {}).get("Obs"))
+            errores = self._como_lista((respuesta.get("Errors") or {}).get("Err"))
+            mensajes = "; ".join(f"({item['Code']}) {item['Msg']}" for item in observaciones + errores)
+            raise Exception(f"ARCA rechazó el comprobante: {mensajes or 'motivo desconocido'}")
 
         return {
             "numero_arca": numero,
@@ -121,7 +207,7 @@ class ArcaCliente:
     def consultar(self, tipo, numero):
         """
         Consulta en ARCA un comprobante ya emitido, por tipo y número.
-        :rtype: dict con los datos del comprobante, o None si no existe
+        :rtype: dict con fecha, neto (gravado + exento), iva, total, cae y doc_receptor, o None si no existe
         """
         try:
             resultado = self._ejecutar(
@@ -130,7 +216,7 @@ class ArcaCliente:
                     "FeCompConsReq": {
                         "CbteTipo": _CODIGO_AFIP_POR_TIPO[tipo],
                         "CbteNro": numero,
-                        "PtoVta": PUNTO_VENTA_HOMOLOGACION,
+                        "PtoVta": self.punto_venta,
                     }
                 },
             )
@@ -138,4 +224,14 @@ class ArcaCliente:
             if str(error).startswith("(602)"):
                 return None
             raise
-        return self._desenvolver(resultado, "FECompConsultarResult").get("ResultGet")
+        comprobante = self._desenvolver(resultado, "FECompConsultarResult").get("ResultGet")
+        if not comprobante:
+            return None
+        return {
+            "fecha": datetime.strptime(str(comprobante["CbteFch"]), "%Y%m%d").date(),
+            "neto": float(comprobante["ImpNeto"]) + float(comprobante.get("ImpOpEx") or 0),
+            "iva": float(comprobante["ImpIVA"]),
+            "total": float(comprobante["ImpTotal"]),
+            "cae": str(comprobante["CodAutorizacion"]),
+            "doc_receptor": str(comprobante.get("DocNro") or ""),
+        }

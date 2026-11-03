@@ -28,6 +28,14 @@ class NegocioComprobante(object):
         """
         return self.datos.listar_por_mes(cuit_contribuyente, condicion, mes, anio)
 
+    def listar_ventas_emitidas_a(self, cuit_receptor, mes, anio):
+        """
+        Ventas de otros contribuyentes del sistema, ya emitidas en ARCA, hechas
+        a este CUIT: son las facturas "recibidas" de sus proveedores.
+        :rtype: list[Comprobante]
+        """
+        return self.datos.listar_ventas_emitidas_a(cuit_receptor, mes, anio)
+
     def obtener(self, comprobante_id):
         """
         Devuelve un comprobante por su id, o None si no existe.

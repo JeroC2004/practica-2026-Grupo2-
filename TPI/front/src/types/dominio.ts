@@ -57,10 +57,16 @@ export interface LibroIva {
 }
 
 // GET /api/validacion-arca/{anio}/{mes}: por cada venta del mes, si ya se
-// emitió en ARCA (tiene CAE) se la vuelve a consultar en vivo para confirmar
-// que sigue vigente; si no, queda "pendiente" de emitir.
-export const ESTADOS_ARCA = ["confirmado", "pendiente", "no_encontrado_en_arca"] as const;
+// emitió en ARCA (tiene CAE) se la vuelve a consultar en vivo y se compara
+// campo a campo; si no, queda "pendiente" de emitir.
+export const ESTADOS_ARCA = ["confirmado", "con_diferencias", "pendiente", "no_encontrado_en_arca"] as const;
 export type EstadoArcaTipo = (typeof ESTADOS_ARCA)[number];
+
+export interface DiferenciaArca {
+  campo: "fecha" | "neto" | "iva" | "total" | "cae";
+  local: string;
+  arca: string;
+}
 
 export interface EstadoArca {
   comprobante_id: number;
@@ -74,4 +80,24 @@ export interface EstadoArca {
   cae: string | null;
   cae_vencimiento: string | null;
   total_en_arca: number | null;
+  diferencias: DiferenciaArca[];
+}
+
+// GET /api/validacion-arca/compras/{anio}/{mes}: conciliación de compras en las
+// dos direcciones contra lo que los proveedores emitieron en ARCA a este CUIT.
+export const ESTADOS_COMPRA_ARCA = ["confirmado", "con_diferencias", "falta_cargar", "no_encontrado_en_arca"] as const;
+export type EstadoCompraArcaTipo = (typeof ESTADOS_COMPRA_ARCA)[number];
+
+export interface EstadoCompraArca {
+  comprobante_id: number | null;
+  cuit_emisor: string;
+  tipo: TipoComprobante;
+  punto_venta: number;
+  numero: number;
+  fecha: string;
+  total: number | null;
+  estado: EstadoCompraArcaTipo;
+  cae: string | null;
+  total_en_arca: number | null;
+  diferencias: DiferenciaArca[];
 }

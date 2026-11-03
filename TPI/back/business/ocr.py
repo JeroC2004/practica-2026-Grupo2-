@@ -6,6 +6,8 @@ import cv2
 import numpy as np
 import pytesseract
 
+from business.excepciones import OcrNoDisponible
+
 TESSERACT_LANG = os.environ.get("TESSERACT_LANG", "eng")
 
 # Ruta default del instalador de UB-Mannheim (winget/instalador oficial para Windows).
@@ -24,6 +26,17 @@ _PUNTO_VENTA_REGEX = re.compile(r"Punto\s*de\s*Venta[:\s]*(\d{4,5})", re.IGNOREC
 _NUMERO_COMPROBANTE_REGEX = re.compile(r"Comp\.?\s*Nro[.:\s]*(\d{1,8})", re.IGNORECASE)
 _FECHA_REGEX = re.compile(r"\b(\d{2})/(\d{2})/(\d{4})\b")
 _TIPO_REGEX = re.compile(r"(FACTURA|NOTA\s+DE\s+CR[EÉ]DITO|NOTA\s+DE\s+D[EÉ]BITO)[^A-Z0-9]{0,20}?([ABC])\b")
+# Tesseract a veces lee "COD." como "COP." o "C0D.": se aceptan esas confusiones.
+_CODIGO_ARCA_REGEX = re.compile(r"\bC[O0][DP](?:IGO)?\.?\s*N?[°º]?\s*(\d{1,3})\b", re.IGNORECASE)
+_LETRA_SUELTA_REGEX = re.compile(r"^\s*([ABC])\s*$", re.MULTILINE)
+
+# Código oficial de ARCA impreso debajo de la letra ("COD. 06"): en el diseño
+# estándar la letra va en un recuadro aparte y Tesseract no la lee. Los
+# códigos van en grupos por letra (A: 1-3, B: 6-8, C: 11-13), y Tesseract
+# confunde dígitos chicos (lee "06" como "08"), así que del código solo se
+# toma la letra; si es factura o nota sale del título impreso.
+_LETRA_POR_CODIGO_ARCA = {1: "A", 2: "A", 3: "A", 6: "B", 7: "B", 8: "B", 11: "C", 12: "C", 13: "C"}
+_NOTA_POR_CODIGO_ARCA = {2: "ND", 3: "NC", 7: "ND", 8: "NC", 12: "ND", 13: "NC"}
 
 
 def _a_float(texto: str) -> float | None:
@@ -55,15 +68,44 @@ def _buscar_importe(texto: str, etiqueta: str) -> float | None:
     return _a_float(coincidencia.group(1)) if coincidencia else None
 
 
-def parsear_texto_comprobante(texto: str) -> dict:
+def _detectar_tipo(texto: str) -> str | None:
+    texto = texto.upper()
+
+    if re.search(r"NOTA\s+DE\s+CR", texto):
+        return "NC"
+    if re.search(r"NOTA\s+DE\s+D", texto):
+        return "ND"
+
+    codigo = _CODIGO_ARCA_REGEX.search(texto)
+    if codigo and int(codigo.group(1)) in _LETRA_POR_CODIGO_ARCA:
+        numero = int(codigo.group(1))
+        if "FACTURA" in texto:
+            return _LETRA_POR_CODIGO_ARCA[numero]
+        return _NOTA_POR_CODIGO_ARCA.get(numero, _LETRA_POR_CODIGO_ARCA[numero])
+
+    tipo = _TIPO_REGEX.search(texto)
+    if tipo:
+        return tipo.group(2)
+
+    letra = _LETRA_SUELTA_REGEX.search(texto)
+    return letra.group(1) if letra else None
+
+
+def parsear_texto_comprobante(texto: str, cuit_contribuyente: str | None = None) -> dict:
     """
     Extrae por regex los campos de un comprobante a partir del texto ya
     reconocido por OCR. Los campos que no se detectan quedan en None: el
     usuario los completa o corrige a mano antes de confirmar la carga, ya que
     el OCR sobre fotos reales nunca es 100% preciso.
+
+    En un comprobante el primer CUIT impreso es el del emisor y el segundo el
+    del receptor. Si el emisor es el contribuyente logueado, es una venta y la
+    contraparte es el receptor; si no, es una compra y la contraparte es el
+    emisor.
     """
     resultado: dict = {
-        "tipo": None,
+        "tipo": _detectar_tipo(texto),
+        "condicion": None,
         "punto_venta": None,
         "numero": None,
         "fecha": None,
@@ -78,9 +120,15 @@ def parsear_texto_comprobante(texto: str) -> dict:
         "total": _buscar_importe(texto, r"(?:Importe\s*)?Total"),
     }
 
-    cuit = _CUIT_REGEX.search(texto)
-    if cuit:
-        resultado["cuit_contraparte"] = "".join(cuit.groups())
+    cuits = ["".join(cuit.groups()) for cuit in _CUIT_REGEX.finditer(texto)]
+    if cuits:
+        emisor, receptor = cuits[0], (cuits[1] if len(cuits) > 1 else None)
+        if cuit_contribuyente and emisor == cuit_contribuyente:
+            resultado["condicion"] = "venta"
+            resultado["cuit_contraparte"] = receptor
+        else:
+            resultado["condicion"] = "compra" if cuit_contribuyente else None
+            resultado["cuit_contraparte"] = emisor
 
     comprobante = _COMPROBANTE_REGEX.search(texto)
     if comprobante:
@@ -104,14 +152,6 @@ def parsear_texto_comprobante(texto: str) -> dict:
         except ValueError:
             pass
 
-    tipo = _TIPO_REGEX.search(texto.upper())
-    if tipo:
-        etiqueta, letra = tipo.group(1), tipo.group(2)
-        if etiqueta.startswith("NOTA"):
-            resultado["tipo"] = "NC" if "CR" in etiqueta else "ND"
-        else:
-            resultado["tipo"] = letra
-
     return resultado
 
 
@@ -122,7 +162,16 @@ def _preprocesar(imagen_bytes: bytes) -> np.ndarray:
     return cv2.adaptiveThreshold(gris, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 31, 11)
 
 
-def reconocer_comprobante(imagen_bytes: bytes) -> dict:
-    """Corre OCR sobre la foto de un comprobante y devuelve los campos detectados."""
-    texto = pytesseract.image_to_string(_preprocesar(imagen_bytes), lang=TESSERACT_LANG)
-    return parsear_texto_comprobante(texto)
+def reconocer_comprobante(imagen_bytes: bytes, cuit_contribuyente: str | None = None) -> dict:
+    """
+    Corre OCR sobre la foto de un comprobante y devuelve los campos detectados.
+    :raise: OcrNoDisponible si el binario de Tesseract no está instalado
+    """
+    try:
+        texto = pytesseract.image_to_string(_preprocesar(imagen_bytes), lang=TESSERACT_LANG)
+    except pytesseract.TesseractNotFoundError as error:
+        raise OcrNoDisponible(
+            "Tesseract OCR no está instalado. Instalalo con 'winget install UB-Mannheim.TesseractOCR' "
+            "o indicá su ruta en TESSERACT_CMD (TPI/.env), y reiniciá el backend."
+        ) from error
+    return parsear_texto_comprobante(texto, cuit_contribuyente)

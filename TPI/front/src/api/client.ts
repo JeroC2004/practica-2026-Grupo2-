@@ -5,6 +5,7 @@ import type {
   Contribuyente,
   CondicionIva,
   EstadoArca,
+  EstadoCompraArca,
   LibroIva,
   TokenOut,
 } from "../types/dominio";
@@ -95,6 +96,12 @@ export const api = {
   validarConArca(token: string, anio: number, mes: number): Promise<EstadoArca[]> {
     return fetch(`${BASE_URL}/validacion-arca/${anio}/${mes}`, { headers: authHeaders(token) }).then((r) =>
       manejarRespuesta<EstadoArca[]>(r),
+    );
+  },
+
+  validarComprasConArca(token: string, anio: number, mes: number): Promise<EstadoCompraArca[]> {
+    return fetch(`${BASE_URL}/validacion-arca/compras/${anio}/${mes}`, { headers: authHeaders(token) }).then((r) =>
+      manejarRespuesta<EstadoCompraArca[]>(r),
     );
   },
 };

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { api, ApiError } from "../api/client";
 import { useAuth } from "../auth/AuthContext";
@@ -77,7 +77,11 @@ export function LibroIvaPage() {
   const { token } = useAuth();
   const [libro, setLibro] = useState<LibroIva | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [errorEmision, setErrorEmision] = useState<string | null>(null);
   const [emitiendoId, setEmitiendoId] = useState<number | null>(null);
+  // Un ref (no estado) para cortar el doble clic: el estado recién se ve en el
+  // próximo render, y dos clics rápidos mandaban dos emisiones con el mismo número.
+  const emitiendo = useRef(false);
 
   const anioNum = Number(anio);
   const mesNum = Number(mes);
@@ -93,15 +97,18 @@ export function LibroIvaPage() {
   useEffect(cargarLibro, [token, anioNum, mesNum]);
 
   async function emitirEnArca(comprobanteId: number) {
+    if (emitiendo.current) return;
+    emitiendo.current = true;
     setEmitiendoId(comprobanteId);
-    setError(null);
+    setErrorEmision(null);
     try {
       await api.emitirEnArca(token!, comprobanteId);
-      cargarLibro();
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "No se pudo emitir el comprobante en ARCA.");
+      setErrorEmision(err instanceof ApiError ? err.message : "No se pudo emitir el comprobante en ARCA.");
     } finally {
+      emitiendo.current = false;
       setEmitiendoId(null);
+      cargarLibro();
     }
   }
 
@@ -121,6 +128,8 @@ export function LibroIvaPage() {
         <Link to={`/libro-iva/${anioAnterior}/${mesAnterior}`}>&larr; mes anterior</Link>
         <Link to={`/libro-iva/${anioSiguiente}/${mesSiguiente}`}>mes siguiente &rarr;</Link>
       </div>
+
+      {errorEmision && <p className="error">{errorEmision}</p>}
 
       <div className="resumen">
         <div className="stat">

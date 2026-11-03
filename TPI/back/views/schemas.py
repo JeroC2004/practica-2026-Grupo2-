@@ -47,6 +47,7 @@ class ComprobanteOcrOut(BaseModel):
     """
 
     tipo: TipoComprobante | None = None
+    condicion: CondicionComprobante | None = None
     punto_venta: int | None = None
     numero: int | None = None
     fecha: date | None = None
@@ -77,6 +78,12 @@ class ComprobanteOut(BaseModel):
     cae_vencimiento: date | None = None
 
 
+class DiferenciaArca(BaseModel):
+    campo: str
+    local: str
+    arca: str
+
+
 class EstadoArca(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
@@ -91,6 +98,21 @@ class EstadoArca(BaseModel):
     cae: str | None = None
     cae_vencimiento: date | None = None
     total_en_arca: float | None = None
+    diferencias: list[DiferenciaArca] = []
+
+
+class EstadoCompraArca(BaseModel):
+    comprobante_id: int | None = None
+    cuit_emisor: str
+    tipo: TipoComprobante
+    punto_venta: int
+    numero: int
+    fecha: date
+    total: float | None = None
+    estado: str
+    cae: str | None = None
+    total_en_arca: float | None = None
+    diferencias: list[DiferenciaArca] = []
 
 
 class LibroIvaOut(BaseModel):

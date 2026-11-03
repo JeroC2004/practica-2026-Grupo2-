@@ -124,6 +124,29 @@ class DatosComprobante:
             )
             return [_a_dominio(orm) for orm in orms]
 
+    def listar_ventas_emitidas_a(self, cuit_receptor, mes, anio):
+        """
+        Lista las ventas de otros contribuyentes, ya emitidas en ARCA, cuyo
+        receptor es el CUIT dado, para un mes/año.
+        :rtype: list[Comprobante]
+        """
+        desde = date(anio, mes, 1)
+        hasta = date(anio + 1, 1, 1) if mes == 12 else date(anio, mes + 1, 1)
+        with obtener_sesion() as sesion:
+            orms = (
+                sesion.query(ComprobanteORM)
+                .filter(
+                    ComprobanteORM.cuit_contraparte == cuit_receptor,
+                    ComprobanteORM.cuit_contribuyente != cuit_receptor,
+                    ComprobanteORM.condicion == CondicionComprobante.VENTA.value,
+                    ComprobanteORM.numero_arca.is_not(None),
+                    ComprobanteORM.fecha >= desde,
+                    ComprobanteORM.fecha < hasta,
+                )
+                .all()
+            )
+            return [_a_dominio(orm) for orm in orms]
+
     def listar_por_rango(self, cuit_contribuyente, condicion, desde, hasta):
         """
         Lista los comprobantes de un contribuyente entre dos fechas (inclusive/exclusive)

@@ -14,7 +14,7 @@ router = APIRouter(prefix="/comprobantes", tags=["comprobantes"])
 async def reconocer_comprobante(archivo: UploadFile = File(...), cuit: str = Depends(obtener_cuit_actual)):
     """Analiza la foto de un comprobante y devuelve los campos detectados, sin guardarlos."""
     contenido = await archivo.read()
-    return ocr.reconocer_comprobante(contenido)
+    return ocr.reconocer_comprobante(contenido, cuit)
 
 
 @router.post("", response_model=ComprobanteOut, status_code=status.HTTP_201_CREATED)

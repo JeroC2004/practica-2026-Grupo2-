@@ -32,3 +32,11 @@ class EmisionArcaInvalida(Exception):
 
 class EmisionArcaRechazada(Exception):
     pass
+
+
+class ArcaNoConfigurada(Exception):
+    pass
+
+
+class OcrNoDisponible(Exception):
+    pass

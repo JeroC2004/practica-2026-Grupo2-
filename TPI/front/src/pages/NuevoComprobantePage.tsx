@@ -37,7 +37,7 @@ export function NuevoComprobantePage() {
       const detectado = await api.reconocerComprobante(token, archivo);
       setForm((previo) => ({
         tipo: detectado.tipo ?? previo.tipo,
-        condicion: previo.condicion,
+        condicion: detectado.condicion ?? previo.condicion,
         punto_venta: detectado.punto_venta ?? previo.punto_venta,
         numero: detectado.numero ?? previo.numero,
         fecha: detectado.fecha ?? previo.fecha,

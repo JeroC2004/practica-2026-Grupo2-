@@ -6,7 +6,8 @@ from fastapi import Header, HTTPException, status
 
 ALGORITMO = "HS256"
 EXPIRACION_MINUTOS = 60
-SECRET_KEY = os.environ.get("JWT_SECRET", "clave-de-desarrollo-no-usar-en-produccion")
+# Un valor vacío en .env también debe usar la clave de desarrollo.
+SECRET_KEY = os.environ.get("JWT_SECRET") or "clave-de-desarrollo-no-usar-en-produccion"
 
 
 def crear_token(cuit: str) -> str:

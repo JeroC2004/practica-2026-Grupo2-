@@ -56,6 +56,19 @@ export interface LibroIva {
   credito_fiscal_computable: number;
 }
 
+export interface EstadisticasMes {
+  mes: number;
+  compras: number;
+  ventas: number;
+  cantidad_compras: number;
+  cantidad_ventas: number;
+}
+
+export interface Estadisticas {
+  anio: number;
+  meses: EstadisticasMes[];
+}
+
 // GET /api/validacion-arca/{anio}/{mes}: por cada venta del mes, si ya se
 // emitió en ARCA (tiene CAE) se la vuelve a consultar en vivo y se compara
 // campo a campo; si no, queda "pendiente" de emitir.

@@ -1,11 +1,12 @@
 import { Link, useLocation } from "react-router-dom";
-import { ChevronLeft, ChevronRight, FilePlus2, LayoutDashboard, ShieldCheck } from "lucide-react";
+import { BarChart3, ChevronLeft, ChevronRight, FilePlus2, LayoutDashboard, ShieldCheck } from "lucide-react";
 import { useAuth } from "../auth/AuthContext";
 
 const ITEMS = [
   { to: "/", etiqueta: "Inicio", Icono: LayoutDashboard, activo: (p: string) => p === "/" || p.startsWith("/libro-iva") },
   { to: "/comprobantes/nuevo", etiqueta: "Nuevo comprobante", Icono: FilePlus2, activo: (p: string) => p.startsWith("/comprobantes") },
   { to: "/validacion-arca", etiqueta: "Validar con ARCA", Icono: ShieldCheck, activo: (p: string) => p.startsWith("/validacion-arca") },
+  { to: "/estadisticas", etiqueta: "Estadísticas", Icono: BarChart3, activo: (p: string) => p.startsWith("/estadisticas") },
 ];
 
 interface Props {

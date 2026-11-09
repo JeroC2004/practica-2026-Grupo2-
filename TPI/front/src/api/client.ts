@@ -7,6 +7,7 @@ import type {
   EstadoArca,
   EstadoCompraArca,
   LibroIva,
+  Estadisticas,
   TokenOut,
 } from "../types/dominio";
 
@@ -34,6 +35,12 @@ function authHeaders(token: string): HeadersInit {
 }
 
 export const api = {
+  obtenerEstadisticas(token: string, anio: number, signal?: AbortSignal): Promise<Estadisticas> {
+    return fetch(`${BASE_URL}/estadisticas/${anio}`, { headers: authHeaders(token), signal }).then((r) =>
+      manejarRespuesta<Estadisticas>(r),
+    );
+  },
+
   registrar(datos: {
     cuit: string;
     razon_social: string;

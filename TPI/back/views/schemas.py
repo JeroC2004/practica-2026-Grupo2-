@@ -115,6 +115,19 @@ class EstadoCompraArca(BaseModel):
     diferencias: list[DiferenciaArca] = []
 
 
+class EstadisticasMesOut(BaseModel):
+    mes: int
+    compras: float
+    ventas: float
+    cantidad_compras: int
+    cantidad_ventas: int
+
+
+class EstadisticasOut(BaseModel):
+    anio: int
+    meses: list[EstadisticasMesOut]
+
+
 class LibroIvaOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 

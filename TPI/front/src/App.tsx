@@ -8,6 +8,7 @@ import { LoginPage } from "./pages/LoginPage";
 import { RegistroPage } from "./pages/RegistroPage";
 import { NuevoComprobantePage } from "./pages/NuevoComprobantePage";
 import { LibroIvaPage } from "./pages/LibroIvaPage";
+import { EstadisticasPage } from "./pages/EstadisticasPage";
 import { ValidacionArcaPage } from "./pages/ValidacionArcaPage";
 
 const CLAVE_SIDEBAR_COLAPSADO = "tpi_sidebar_colapsado";
@@ -27,6 +28,7 @@ function Rutas() {
       <Route element={<ProtectedRoute />}>
         <Route path="/comprobantes/nuevo" element={<NuevoComprobantePage />} />
         <Route path="/libro-iva/:anio/:mes" element={<LibroIvaPage />} />
+        <Route path="/estadisticas" element={<EstadisticasPage />} />
         <Route path="/validacion-arca" element={<ValidacionArcaPage />} />
         <Route path="/validacion-arca/:anio/:mes" element={<ValidacionArcaPage />} />
       </Route>

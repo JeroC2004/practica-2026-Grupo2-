@@ -80,6 +80,38 @@
 }
 
 @layer components {
+  .estadisticas-filtros {
+    @apply mb-6 grid gap-4 sm:grid-cols-[1fr_1fr_auto] sm:items-end;
+  }
+
+  .estadisticas-grafico {
+    @apply mt-3 grid gap-5;
+  }
+
+  .estadisticas-mes {
+    @apply grid gap-2 text-sm;
+  }
+
+  .estadisticas-barra {
+    @apply grid grid-cols-[4rem_1fr] items-center gap-2 sm:grid-cols-[4rem_1fr_11rem];
+  }
+
+  .estadisticas-barra > span:last-child {
+    @apply col-span-2 text-right tabular-nums sm:col-span-1;
+  }
+
+  .estadisticas-pista {
+    @apply h-3 overflow-hidden rounded-full bg-canvas;
+  }
+
+  .estadisticas-venta {
+    @apply h-full rounded-full bg-primary;
+  }
+
+  .estadisticas-compra {
+    @apply h-full rounded-full bg-orange-400;
+  }
+
   .app-shell {
     @apply flex min-h-screen flex-col;
   }

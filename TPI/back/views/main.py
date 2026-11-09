@@ -17,13 +17,14 @@ from business.excepciones import (
     OcrNoDisponible,
     PasswordNoCoincide,
 )
-from views.routers import auth, comprobantes, libro_iva, validacion_arca
+from views.routers import auth, comprobantes, estadisticas, libro_iva, validacion_arca
 
 app = FastAPI(title="Libro de IVA Digital", description="TPI Integrador - Grupo 2")
 
 app.include_router(auth.router, prefix="/api")
 app.include_router(comprobantes.router, prefix="/api")
 app.include_router(libro_iva.router, prefix="/api")
+app.include_router(estadisticas.router, prefix="/api")
 app.include_router(validacion_arca.router, prefix="/api")
 
 # El front (React) vive en TPI/front y se sirve sólo si ya se corrió "npm run build".

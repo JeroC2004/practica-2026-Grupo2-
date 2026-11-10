@@ -17,3 +17,9 @@ credito_fiscal_computable = iva_credito_total * coeficiente
 
 La complejidad extra es que ese coeficiente se recalcula de forma **acumulada** a lo largo del ejercicio fiscal (no aislado mes a mes), lo que da lugar a reglas de negocio testeables como "el coeficiente nunca puede superar 1" o "sin ventas exentas, el coeficiente es 1".
 
+
+## Estado de la propuesta al 10/11/2026
+
+La propuesta anterior se conserva como antecedente. Ya se implementaron carga manual y OCR, cuentas autenticadas, Libro de IVA con prorrateo acumulado, emisión y validación ARCA en homologación, conciliación de compras dentro del circuito de usuarios y estadísticas por año/mes.
+
+El alcance real no incluye cierre mensual persistido, exportación del libro ni importación completa de compras desde ARCA. Consultar la documentación vigente en [PROYECTO.md](PROYECTO.md) y las instrucciones en [README.md](README.md).

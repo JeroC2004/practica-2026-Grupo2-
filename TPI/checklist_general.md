@@ -22,3 +22,18 @@ El siguiente checklist permite una fácil detección de malas prácticas y posib
 - [ ] Utilizar Test Unitarios (Pytest).
 - [ ] Incorporar Autorización (Roles).
 - [ ] El sitio debe ser Responsive o Adaptative (verse bien en dispositivos móviles).
+## Estado del proyecto al 10/11/2026
+
+Se conserva arriba el checklist de la cátedra. Las casillas sin marcar no deben interpretarse como ausencia de implementación: el estado comprobable por código es el siguiente.
+
+- [x] Contraseñas almacenadas con PBKDF2-HMAC-SHA256 y salt aleatorio.
+- [x] Errores de negocio traducidos a respuestas HTTP.
+- [x] Sesiones JWT por contribuyente, con almacenamiento del token en `sessionStorage`.
+- [x] Frontend React/TypeScript con estilos adaptables.
+- [x] Pruebas pytest de negocio, OCR, seguridad, estadísticas y ARCA.
+- [ ] Auditoría completa de nombres y formato con Flake8.
+- [ ] Validación manual de navegadores y navegación normal/incógnita.
+- [ ] Autorización por roles: no implementada; el aislamiento actual se basa en el CUIT autenticado.
+- [ ] Internacionalización: interfaz en español.
+
+Existen constantes y objetos compartidos de configuración; no se acredita el criterio absoluto de ausencia de variables globales. Ver alcance y pendientes en [PROYECTO.md](PROYECTO.md).

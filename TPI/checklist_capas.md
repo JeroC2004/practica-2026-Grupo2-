@@ -44,3 +44,19 @@ El siguiente checklist permite una fácil detección de malas prácticas y posib
 - [ ] Debe cumplir con los estándares de formato:
     - Si es un único archivo, debe llamarse **db.py**
     - Si son múltiples archivos, deben estar todos en una carpeta **datos**
+
+## Estado del proyecto al 10/11/2026
+
+Se conserva arriba el checklist original de la cátedra. La estructura real y sus diferencias se detallan a continuación, sin dar por cumplidos requisitos de entrega no verificados.
+
+- [x] Presentación web en `front/src` y API en `back/views`.
+- [x] Reglas de negocio en `back/business`, sin componentes HTML o React.
+- [x] Consultas SQL y ORM concentrados en `back/datos`.
+- [x] Persistencia SQLite mediante SQLAlchemy y objetos de dominio separados del ORM.
+- [x] Reglas comprobadas por pruebas: duplicados, importes, registro, prorrateo, estadísticas y emisión.
+- [x] Modelo de dominio y esquema de arquitectura en [PROYECTO.md](PROYECTO.md).
+- [ ] Despliegue público: no acreditado en el repositorio.
+- [ ] Formato de todas las capas: pendiente de auditoría completa.
+- [ ] Cambio de motor de base de datos: no verificado.
+
+El punto de entrada es `back/app.py`, no un `app.py` en la raíz de `TPI`. Los servicios también devuelven listas, números y diccionarios para cálculos e integración; no todas las funciones devuelven exclusivamente objetos de negocio. Estas diferencias se conservan explícitas para revisar el cumplimiento con la cátedra.
